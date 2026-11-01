@@ -1,3 +1,10 @@
+---
+title: API reference
+description: REST routes, authentication, RBAC boundaries and integration conventions.
+section: docs
+permalink: /api-reference/
+---
+
 # API reference
 
 Base path: `/api/v1`
@@ -252,6 +259,17 @@ Pushes queued employee mutations with base server versions.
 Roles: admin, hr.
 
 Returns server state for reconciliation.
+
+## Agent service endpoints
+
+The optional agent has its **own** API, distinct from the business `/api/v1` endpoints. The authenticated Next.js web application proxies AI requests through these same-origin routes:
+
+- `POST /api/agent/chat` — submit a conversational request that can use permitted HR tools.
+- `POST /api/agent/confirm` — confirm a staged, single-use action as the authenticated actor.
+
+The private agent service validates the current principal through the HRIS API and uses the existing protected business endpoints for every operation. Agent actions are not direct SQL writes to HR data.
+
+Refer to [Agentic HRIS implementation]({{ '/agentic-hris/' | relative_url }}) for lifecycle, confirmation semantics, and limitations.
 
 ## Security expectations for API consumers
 

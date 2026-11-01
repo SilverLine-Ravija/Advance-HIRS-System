@@ -1,3 +1,10 @@
+---
+title: System architecture
+description: Understand HRIS components, trust boundaries, tenancy and local-first design.
+section: docs
+permalink: /architecture/
+---
+
 # Architecture
 
 ## System overview
@@ -92,6 +99,16 @@ Responsibilities:
 - cloud leave/attendance/audit operations.
 
 Managers and employees should use the web portal rather than the native HR console.
+
+## AI assistant service
+
+Path: `apps/agent`
+
+The separate Go AI service is reached through a server-side Next.js BFF proxy. It verifies the authenticated user's identity using the HRIS API and invokes only allowlisted, role-scoped API tools. It does not directly read or mutate HR data tables.
+
+PostgreSQL stores durable, single-use action proposals for the assistant. An authorized user must confirm a staged mutation before the agent attempts to execute it. The Go HRIS API still independently enforces the tenant, role, manager scope and leave/attendance invariants.
+
+The service is optional in local development and should be deployed privately alongside `hris-web` and `hris-api`. See [Agentic HRIS implementation]({{ '/agentic-hris/' | relative_url }}).
 
 ## Authentication
 

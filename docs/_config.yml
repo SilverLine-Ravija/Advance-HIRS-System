@@ -1,0 +1,18 @@
+title: Advance HRIS
+description: A hybrid, local-first HR information system with governed AI-assisted workflows.
+url: "https://silverline-ravija.github.io"
+baseurl: "/Advance-HIRS-System"
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+kramdown:
+  input: GFM
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock

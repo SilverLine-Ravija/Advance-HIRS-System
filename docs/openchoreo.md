@@ -1,3 +1,10 @@
+---
+title: OpenChoreo deployment
+description: Deploy the Next.js, Go HRIS and private AI service as OpenChoreo components.
+section: docs
+permalink: /openchoreo/
+---
+
 # OpenChoreo deployment model
 
 Advance HRIS is structured as a realistic multi-component workload: a public web experience, a protected Go application API, PostgreSQL, and an optional native HR/admin desktop client using the same API.
@@ -33,9 +40,21 @@ Advance HRIS is structured as a realistic multi-component workload: a public web
 
 `JWT_SECRET`, database credentials and bootstrap passwords must be injected as secrets rather than committed to a deployment manifest.
 
+### `hris-agent` (optional AI component)
+
+- Source: `apps/agent`
+- Runtime: Go
+- Port: `8090`
+- Accessibility: **private/internal only**, never publicly expose the agent.
+- Required configuration: `HRIS_API_URL`, `AGENT_DATABASE_URL`, `OPENAI_API_KEY`.
+- Optional configuration: `OPENAI_MODEL` and other provider settings described in [agentic implementation]({{ '/agentic-hris/' | relative_url }}).
+- Set `AGENT_INTERNAL_URL` in the web component to the agent's internal service address.
+
+All agent calls remain subject to the existing HRIS API role checks and employee/organization scopes.
+
 ### PostgreSQL
 
-Use managed PostgreSQL or an environment-specific data-plane resource. Run `db/migrate.sh` (or an equivalent controlled migration job) before promoting API traffic. Production should add a schema-version registry and release-level migration orchestration before the first stable release.
+Use managed PostgreSQL or an environment-specific data-plane resource. The optional agent uses dedicated action-state tables; isolate that database role from the core HR data tables. Run `db/migrate.sh` (or an equivalent controlled migration job) before promoting API traffic. Production should add a schema-version registry and release-level migration orchestration before the first stable release.
 
 ### Desktop
 
