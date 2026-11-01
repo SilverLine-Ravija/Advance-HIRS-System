@@ -76,3 +76,7 @@ Do **not** merge production overrides into the demo `docker-compose.yml`. They a
 - `docker-compose.ci-agentic.yml`: fake AI provider for automated integration tests only.
 
 Configuration additionally requires `MIGRATION_DATABASE_URL` (separate privileged schema migration role), and a private `AGENT_DATABASE_URL` for the agent with only the necessary action-state permissions. See [Docker deployment]({{ '/docker-deployment/' | relative_url }}) for startup and SSL proxy guidance.
+
+## Session database requirements
+
+Run `007_revocable_sessions.sql` before starting the updated API. The Go API now needs live PostgreSQL access on each authenticated request for token revocation and account/membership checks; it deliberately fails closed when unavailable. No extra service or configuration variable is required. Plan an expiry-based `revoked_sessions` cleanup job and monitor authentication latency.

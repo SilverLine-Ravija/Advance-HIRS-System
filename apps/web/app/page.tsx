@@ -70,7 +70,16 @@ export default function Home() {
     finally { setBusy(""); }
   }
 
-  async function logout() { await fetch("/api/session/logout", {method: "POST"}); setData(emptyData); }
+  async function logout() {
+    try {
+      const response = await fetch("/api/session/logout", {method: "POST"});
+      if (!response.ok) throw new Error("Could not securely revoke the session. Please try again.");
+      setData(emptyData);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign out failed, please retry.");
+    }
+  }
 
   async function createLeave(event: FormEvent) {
     event.preventDefault(); if (!data.user) return; setBusy("leave-create");

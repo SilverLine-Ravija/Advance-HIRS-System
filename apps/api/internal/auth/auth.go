@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -37,6 +39,11 @@ func NewManager(secret string, ttl time.Duration) (*Manager, error) {
 func (m *Manager) Issue(userID, email, displayName, orgID, orgName, role string) (string, time.Time, error) {
 	now := time.Now().UTC()
 	expires := now.Add(m.ttl)
+	// A random JWT ID prevents two logins in the same second producing the same token.
+	idBytes := make([]byte, 16)
+	if _, err := rand.Read(idBytes); err != nil {
+		return "", time.Time{}, fmt.Errorf("generate session identifier: %w", err)
+	}
 	claims := Claims{
 		UserID:         userID,
 		Email:          email,
@@ -45,6 +52,7 @@ func (m *Manager) Issue(userID, email, displayName, orgID, orgName, role string)
 		Organization:   orgName,
 		Role:           role,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        hex.EncodeToString(idBytes),
 			Issuer:    "advance-hris",
 			Subject:   userID,
 			IssuedAt:  jwt.NewNumericDate(now),

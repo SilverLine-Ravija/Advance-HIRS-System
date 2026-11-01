@@ -16,6 +16,7 @@ func NewHandlerV5(dataStore *store.Store, authManager *auth.Manager, allowedOrig
 	mux.HandleFunc("GET /health", server.health)
 	mux.HandleFunc("POST /api/v1/auth/login", server.login)
 	mux.HandleFunc("GET /api/v1/auth/me", server.authorize(server.me, "admin", "hr", "manager", "employee"))
+	mux.HandleFunc("POST /api/v1/auth/logout", server.authorize(server.logout, "admin", "hr", "manager", "employee"))
 
 	mux.HandleFunc("POST /api/v1/access/invitations/inspect", server.inspectAccessInvitation)
 	mux.HandleFunc("POST /api/v1/access/invitations/accept", server.acceptAccessInvitation)

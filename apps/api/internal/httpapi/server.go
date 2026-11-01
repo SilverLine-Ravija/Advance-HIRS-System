@@ -292,6 +292,15 @@ func (s *Server) authorize(next http.HandlerFunc, roles ...string) http.HandlerF
 			writeError(w, http.StatusUnauthorized, "unauthorized", "access token is invalid or expired")
 			return
 		}
+		active, err := s.store.SessionActive(r.Context(), store.SessionDigest(raw), claims.OrganizationID, claims.UserID, claims.Role)
+		if err != nil {
+			writeError(w, http.StatusServiceUnavailable, "session_store_unavailable", "could not verify current session")
+			return
+		}
+		if !active {
+			writeError(w, http.StatusUnauthorized, "session_invalid", "session revoked or organization access changed")
+			return
+		}
 		if _, ok := allowed[claims.Role]; !ok {
 			writeError(w, http.StatusForbidden, "forbidden", "your role does not allow this action")
 			return

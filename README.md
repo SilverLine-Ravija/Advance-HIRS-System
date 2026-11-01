@@ -306,3 +306,7 @@ The agent assistant now supports scoped action history and safe dismissal of sti
 The normal `docker compose up --build` remains **demo-only**. The optional development agent uses `docker-compose.agentic.yml`. For an external database and a TLS-terminating reverse proxy, use the separate [Docker deployment guide](docs/docker-deployment.md) and `docker-compose.production.yml` with `docker-compose.production.agentic.yml` for the private AI service. The production compose templates do not seed demo data or publish API/agent ports.
 
 A deterministic model-provider mock and `bash scripts/agent-docker-smoke.sh` exercise the full session-proxy, AI tool, proposal confirmation, dismissal and PostgreSQL flow without using a real AI key.
+
+## Server-side session revocation
+
+Signing out now revokes the JWT in PostgreSQL before the browser deletes its HttpOnly cookie. Each protected Go API request checks the revocation digest and verifies that the user and organization membership remain active with the same role. Previously issued tokens remain usable until their original expiration **unless revoked, or membership/user status changed**. The new migration is `db/migrations/007_revocable_sessions.sql`; current access tokens still expire after eight hours. See [access and tenancy](docs/access-and-tenancy.md) for the full security model.

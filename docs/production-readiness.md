@@ -74,7 +74,7 @@ Validate:
 - secret rotation procedure;
 - session expiry behavior.
 
-Current access tokens are stateless and expire after eight hours. Refresh-token revocation, user session management and SSO/OIDC are future layers.
+Access tokens expire after eight hours; server-side sign-out revocation and live account/membership validation are now implemented. Refresh-token rotation, centralized session/device management and SSO/OIDC are future layers.
 
 ### AI service production controls
 
@@ -130,7 +130,7 @@ These are not complete product modules yet:
 - performance goals/reviews;
 - recruitment pipeline;
 - employee document repository and notification delivery;
-- enterprise SSO/OIDC and refresh-token revocation;
+- enterprise SSO/OIDC, refresh-token rotation and centralized session/device management;
 - full desktop conflict-resolution UI;
 - a production-hardened AI HR copilot (an initial permission-aware assistant now exists, but needs vendor privacy review, stronger abuse controls and operational validation).
 
@@ -138,7 +138,7 @@ Do not expose placeholder navigation as if these features were implemented.
 
 ## Recommended next engineering sequence
 
-1. refresh-token/session revocation and SSO/OIDC;
+1. SSO/OIDC, refresh-token rotation and multi-device session management (single-session revocation is implemented);
 2. rate limiting and abuse controls;
 3. structured logs/metrics/traces;
 4. automated backup/restore validation;
@@ -154,3 +154,7 @@ Do not expose placeholder navigation as if these features were implemented.
 The repository provides `docker-compose.production.yml` and an optional private agent overlay to remove seeded demo users and unnecessary host-exposed backend ports. This is a **deployment starting point**, not proof of enterprise security. You must provide managed PostgreSQL, role-specific credentials, an HTTPS reverse proxy, verified backups/restore, rate limits, telemetry, secret storage and company policy review.
 
 The agent action history/dismissal feature improves user recovery, but uncertain backend execution still requires inspection of the authoritative HRIS record before issuing another write. Review [Docker deployment]({{ '/docker-deployment/' | relative_url }}) and [security and privacy]({{ '/security-and-privacy/' | relative_url }}).
+
+## Session revocation deployment checks
+
+Migration `007_revocable_sessions.sql` must run before the updated API receives requests. The API will intentionally return 503 for protected calls if the database-backed revocation query fails. Check both Go API logout and Next.js cookie logout after each production deployment, and implement expiry-based cleanup for old token digests.
