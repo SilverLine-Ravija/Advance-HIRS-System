@@ -1,0 +1,21 @@
+# Local/CI-only mock provider. Never use this overlay with real HR data.
+services:
+  mock-model:
+    image: node:22-alpine
+    command: ["node", "/app/mock-model.js"]
+    volumes:
+      - ./scripts/mock-model.js:/app/mock-model.js:ro
+    expose:
+      - "8999"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:8999/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  agent:
+    environment:
+      OPENAI_BASE_URL: http://mock-model:8999/v1
+      OPENAI_MODEL: mock-tool-calling-model
+    depends_on:
+      mock-model:
+        condition: service_healthy

@@ -18,6 +18,7 @@ This increment adds an authenticated AI assistant without replacing existing bus
 - Manager review proposals and limited HR record creation/updates with confirmation.
 - Workforce insights based on existing dashboard and directory APIs (no invented KPIs).
 - Single-use PostgreSQL-persisted action proposals, 10-minute expiry, audit outcome, retry prevention and bound actor/tenant.
+- Actor-scoped recent action history, explicit safe dismissal of pending proposals and recovery after page reloads.
 - Next.js `/assistant` interface and same-origin server-side BFF API proxy.
 - Separate agent container deployable as another OpenChoreo application component.
 
@@ -25,7 +26,7 @@ Not shipped: payroll computations, candidate recruiting pipeline, employee docum
 
 ## Running in local development
 
-1. Clone the current repository and check out the default branch. The existing migrations script automatically runs `005_agent_actions.sql`.
+1. Clone the current repository and check out the default branch. The existing migrations script automatically runs `005_agent_actions.sql` and `006_agent_action_lifecycle.sql`.
 2. Set an OpenAI-compatible provider key in your local environment. Never commit it or expose it through `NEXT_PUBLIC_` variables.
 3. Start the stack:
 
@@ -55,7 +56,18 @@ On OpenChoreo, deploy `apps/agent` as **a private service on port 8090**, wire `
 1. **Test infrastructure.** CI runs Go tool tests and builds the Docker image. PostgreSQL CI tests verify one-time proposal execution under concurrent confirmations. Extend the suite for actual HRIS RBAC, revalidation after role changes and provider failures.
 2. **Approval ownership.** Confirming an agent-proposed manager decision is a human action, but the existing Go HRIS manager permission checks are still the source of truth.
 3. **Freshness.** Model may cite stale tool outputs; use per-request read validation before a mutation and never assume a previous balance remains unchanged. The existing HRIS transactional approval path handles balance conflicts.
-4. **UX.** Dismissed proposals remain in the database until expiry. Add a UI for reviewing past action status, accessibility evaluation, and localization.
+4. **UX.** The assistant now lists recent action statuses and can atomically dismiss pending actions. Historical results are still bounded and require eventual retention/cleanup policy, accessibility evaluation and localization.
 5. **Company policies.** This increment only reads structured policies already in PostgreSQL. Document and handbook RAG require authorization-aware document storage, chunking, citations and data-retention policies.
 6. **Multi-agent architecture.** This intentionally starts with **one orchestrator** and role-scoped tools. Separate autonomous agents would introduce unnecessary orchestration, privacy and consistency risks before validating customer demand.
 7. **AI quality.** Add evaluation datasets, prompt-injection tests, abuse tests, costs per successful HR action, human override metrics and user feedback before customer rollout.
+
+
+## Review, dismiss and recover agent actions
+
+- `GET /api/agent/actions?limit=20` returns at most 50 of the **authenticated actor's own** recent action records. It never includes raw tool arguments or full HRIS responses. Unexecuted expired proposals display as `expired`.
+- `POST /api/agent/actions/{id}/dismiss` changes **only a pending, unexpired proposal owned by the caller** to `dismissed`. No business mutation is attempted.
+- `POST /api/agent/confirm` continues to require the original actor, organization, permissions and a still-pending proposal. A dismissed proposal responds with a conflict and cannot execute.
+- The web assistant renders action history and lets the user confirm or dismiss still-pending proposals after a reload. The preview is visible before confirmation.
+- After a network error, consult the action history **and the underlying HRIS record**. A stale `running` state is ambiguous; do not assume that retrying is safe.
+
+The history endpoint is a recent per-user view, not an audit-export service or retention pipeline. Account-wide and compliance-grade audit export remain further development.

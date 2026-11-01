@@ -65,3 +65,14 @@ Inject secrets using environment-scoped secret management. Do not commit `.env` 
 The current local Compose uses one demonstration database login; this is **not** appropriate production least privilege. Provision an agent-specific role that can access only its action-state table. Never share HR data credentials with the model provider.
 
 See [OpenChoreo deployment]({{ '/openchoreo/' | relative_url }}) · [Security guide]({{ '/security-and-privacy/' | relative_url }}) · [Development guide]({{ '/development/' | relative_url }}).
+
+
+## Separate Docker deployment templates
+
+Do **not** merge production overrides into the demo `docker-compose.yml`. They are intentionally distinct stacks:
+
+- `docker-compose.production.yml`: Go API, Next.js web and migration job, **without demo passwords, demo seeding, built-in PostgreSQL or public API ports**.
+- `docker-compose.production.agentic.yml`: opt-in private agent bound to `AGENT_INTERNAL_URL`; the agent has **no published host ports**.
+- `docker-compose.ci-agentic.yml`: fake AI provider for automated integration tests only.
+
+Configuration additionally requires `MIGRATION_DATABASE_URL` (separate privileged schema migration role), and a private `AGENT_DATABASE_URL` for the agent with only the necessary action-state permissions. See [Docker deployment]({{ '/docker-deployment/' | relative_url }}) for startup and SSL proxy guidance.

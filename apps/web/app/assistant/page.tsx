@@ -7,6 +7,7 @@ import styles from "./assistant.module.css";
 type Turn = {role: "user" | "assistant"; content: string};
 type Proposal = {id: string; tool: string; preview: string; expires_at: string};
 type Response = {reply: string; pending_actions: Proposal[]};
+type ActionHistory = {id: string; tool: string; preview: string; status: "pending" | "expired" | "running" | "completed" | "failed" | "dismissed"; created_at: string; expires_at: string; executed_at?: string; error_message?: string};
 
 const examples = [
   "How much annual leave do I have left?",
@@ -33,10 +34,26 @@ export default function AssistantPage() {
   const [confirming, setConfirming] = useState("");
   const [error, setError] = useState("");
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [actionHistory, setActionHistory] = useState<ActionHistory[]>([]);
+  const [historyBusy, setHistoryBusy] = useState(false);
+
+  async function refreshHistory() {
+    setHistoryBusy(true);
+    try {
+      const result = await fetch("/api/agent/actions?limit=12", {cache: "no-store"});
+      if (!result.ok) return;
+      const data = await result.json() as {data: ActionHistory[]};
+      setActionHistory(data.data || []);
+    } catch {
+      // Chat should remain usable if only action-history loading fails.
+    } finally {
+      setHistoryBusy(false);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/hr/auth/me", {cache: "no-store"})
-      .then(r => setSignedIn(r.ok))
+      .then(r => { setSignedIn(r.ok); if (r.ok) void refreshHistory(); })
       .catch(() => setSignedIn(false));
   }, []);
 
@@ -53,6 +70,7 @@ export default function AssistantPage() {
       const result = await post<Response>("/api/agent/chat", {message, history});
       setTurns(old => [...old, {role: "assistant" as const, content: result.reply}]);
       setProposals(result.pending_actions || []);
+      void refreshHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to reach the assistant");
       setTurns(old => [...old, {role: "assistant" as const, content: "I couldn't finish that request. No changes were confirmed."}]);
@@ -69,10 +87,26 @@ export default function AssistantPage() {
       const response = await post<{status: string; message?: string}>("/api/agent/confirm", {action_id: action.id});
       setTurns(old => [...old, {role: "assistant" as const, content: `${response.message || "Action processed"} (status: ${response.status}). See your HRIS record for the final result.`}]);
       setProposals(old => old.filter(item => item.id !== action.id));
+      void refreshHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not confirm action");
       // Failed and ambiguous executions are not safe to resubmit from this card.
       setProposals(old => old.filter(item => item.id !== action.id));
+    } finally {
+      setConfirming("");
+    }
+  }
+
+  async function dismissAction(id: string) {
+    if (busy || confirming) return;
+    setConfirming(id);
+    setError("");
+    try {
+      await post(`/api/agent/actions/${id}/dismiss`, {});
+      setProposals(old => old.filter(item => item.id !== id));
+      await refreshHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to dismiss the action");
     } finally {
       setConfirming("");
     }
@@ -111,10 +145,28 @@ export default function AssistantPage() {
           <small>Expires {new Date(action.expires_at).toLocaleString()}</small>
           <div className={styles.actions}>
             <button type="button" onClick={() => void confirm(action)} disabled={Boolean(confirming)}> {confirming === action.id ? "Submitting…" : "Confirm action"}</button>
-            <button type="button" className={styles.secondary} onClick={() => setProposals(old => old.filter(item => item.id !== action.id))} disabled={Boolean(confirming)}>Dismiss</button>
+            <button type="button" className={styles.secondary} onClick={() => void dismissAction(action.id)} disabled={Boolean(confirming)}>Dismiss safely</button>
           </div>
         </article>)}
       </div>}
+      {signedIn === true && <section className={styles.historyPanel} aria-label="Your recent AI actions">
+        <div className={styles.historyHeader}>
+          <div><h2>Recent actions</h2><p>Only your own actions within this organization. Unconfirmed changes have not been applied.</p></div>
+          <button type="button" className={styles.refresh} onClick={() => void refreshHistory()} disabled={historyBusy}>{historyBusy ? "Checking…" : "Refresh"}</button>
+        </div>
+        {actionHistory.length === 0 ? <p className={styles.historyEmpty}>No recent agent actions.</p> : <div className={styles.historyList}>
+          {actionHistory.map(item => <article className={styles.historyItem} key={item.id}>
+            <div className={styles.historyMeta}><strong>{item.tool.replaceAll("_", " ")}</strong><span className={styles.historyStatus} data-status={item.status}>{item.status}</span></div>
+            <p>{item.preview}</p>
+            <small>Created {new Date(item.created_at).toLocaleString()}{item.status === "pending" ? " · Expires " + new Date(item.expires_at).toLocaleString() : ""}</small>
+            {item.error_message && <small className={styles.historyError}>{item.error_message}</small>}
+            {item.status === "pending" && <div className={styles.actions}>
+              <button type="button" disabled={Boolean(confirming) || busy} onClick={() => void confirm({id: item.id, tool: item.tool, preview: item.preview, expires_at: item.expires_at})}>{confirming === item.id ? "Working…" : "Review and confirm"}</button>
+              <button type="button" disabled={Boolean(confirming) || busy} className={styles.secondary} onClick={() => void dismissAction(item.id)}>Dismiss</button>
+            </div>}
+          </article>)}
+        </div>}
+      </section>}
       {error && <div role="alert" className={styles.error}>{error}</div>}
       <form className={styles.form} onSubmit={e => void send(e)}>
         <label htmlFor="assistant-message" className={styles.srOnly}>Message the HR assistant</label>

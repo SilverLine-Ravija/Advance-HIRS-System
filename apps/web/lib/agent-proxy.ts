@@ -20,7 +20,8 @@ export async function proxyAgent(request: Request, endpoint: "chat" | "confirm")
   if (body.length > 64_000) {
     return NextResponse.json({error: {message: "Request too large"}}, {status: 413});
   }
-  const target = `${process.env.AGENT_INTERNAL_URL || "http://127.0.0.1:8090"}/api/agent/${endpoint}`;
+  const query = method === "GET" ? new URL(request.url).search : "";
+  const target = `${process.env.AGENT_INTERNAL_URL || "http://127.0.0.1:8090"}/api/agent/${endpoint}${query}`;
   try {
     const response = await fetch(target, {
       method: "POST",

@@ -4,6 +4,16 @@ name: Agent CI
     paths:
       - 'apps/agent/**'
       - 'db/migrations/005_agent_actions.sql'
+      - 'db/migrations/006_agent_action_lifecycle.sql'
+      - 'apps/web/app/api/agent/**'
+      - 'apps/web/app/assistant/**'
+      - 'apps/web/lib/agent-proxy.ts'
+      - 'docker-compose.agentic.yml'
+      - 'docker-compose.ci-agentic.yml'
+      - 'docker-compose.production.yml'
+      - 'docker-compose.production.agentic.yml'
+      - 'scripts/mock-model.js'
+      - 'scripts/agent-docker-smoke.sh'
       - '.github/workflows/agent-ci.yml'
   pull_request:
     paths:
@@ -48,3 +58,12 @@ jobs:
         run: go vet -mod=mod ./...
       - name: Build container
         run: docker build -t advance-hris-agent:ci ./apps/agent
+
+  agent-e2e:
+    name: Full agentic Docker Compose integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise web -> private agent -> API -> Postgres with a mock model
+        run: bash scripts/agent-docker-smoke.sh

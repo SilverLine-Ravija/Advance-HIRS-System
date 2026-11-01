@@ -70,3 +70,14 @@ Check effective dates, assigned timezone, schedule start/end, breaks, grace peri
 Open a [GitHub issue](https://github.com/SilverLine-Ravija/Advance-HIRS-System/issues) with non-sensitive reproduction steps, the affected module, expected vs actual behavior, and sanitized logs. Never attach credentials, bearer tokens or employee records.
 
 Read [configuration]({{ '/configuration/' | relative_url }}) · [testing]({{ '/testing/' | relative_url }}) · [production readiness]({{ '/production-readiness/' | relative_url }}).
+
+
+## Agent proposal remains pending after a page reload
+
+Open `/assistant` and use the **Recent actions** panel. The authenticated action history is persisted in PostgreSQL; a pending action is still unsubmitted. You can dismiss it safely or review and confirm it while it remains valid. Expired or dismissed actions cannot be confirmed.
+
+## Production Docker service cannot start
+
+Use `docker compose -f docker-compose.production.yml config --quiet` with the required environment variables supplied. Missing `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `JWT_SECRET` or `WEB_ORIGIN` fail intentionally. The production stack **does not provision a PostgreSQL server or any demo organization**. Verify your database endpoint, network rules, controlled migration role and first-admin provisioning separately.
+
+See [Docker deployment]({{ '/docker-deployment/' | relative_url }}).

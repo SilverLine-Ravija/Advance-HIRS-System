@@ -1,0 +1,71 @@
+# Standalone reference for a reverse-proxy / managed-Postgres deployment.
+# Do NOT combine with docker-compose.yml, which intentionally includes demo users.
+# This is not a substitute for backups, SSO, TLS termination or a security review.
+name: advance-hris-production
+
+services:
+  migrate:
+    image: postgres:17-alpine
+    environment:
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:?Set a privileged migration DB connection}
+    volumes:
+      - ./db:/workspace/db:ro
+    command: ["sh", "/workspace/db/migrate.sh"]
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      API_PORT: "8080"
+      DATABASE_URL: ${DATABASE_URL:?Set a scoped application DB connection}
+      JWT_SECRET: ${JWT_SECRET:?Set a strong JWT signing secret}
+      WEB_ORIGIN: ${WEB_ORIGIN:?Set the exact HTTPS frontend origin}
+      SEED_DEMO_DATA: "false"
+      BOOTSTRAP_ORG_NAME: ${BOOTSTRAP_ORG_NAME:-}
+      BOOTSTRAP_ORG_SLUG: ${BOOTSTRAP_ORG_SLUG:-}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+    expose:
+      - "8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://api:8080
+      WEB_COOKIE_SECURE: "true"
+    # A host-side HTTPS reverse proxy must be placed in front of this loopback port.
+    ports:
+      - "127.0.0.1:${HRIS_WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/docs >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped

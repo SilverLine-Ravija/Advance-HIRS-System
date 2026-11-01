@@ -1,0 +1,40 @@
+# Optional AI service for docker-compose.production.yml.
+# Run: docker compose -f docker-compose.production.yml -f docker-compose.production.agentic.yml up --build -d
+# The agent is internal-only; never publish port 8090.
+services:
+  agent:
+    build:
+      context: ./apps/agent
+    environment:
+      AGENT_PORT: "8090"
+      HRIS_API_URL: http://api:8080
+      AGENT_DATABASE_URL: ${AGENT_DATABASE_URL:?Set least-privilege agent action DB credentials}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set provider secret from a secret manager}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+    expose:
+      - "8090"
+    depends_on:
+      api:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/hris-agent", "-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    environment:
+      AGENT_INTERNAL_URL: http://agent:8090
+    depends_on:
+      agent:
+        condition: service_healthy

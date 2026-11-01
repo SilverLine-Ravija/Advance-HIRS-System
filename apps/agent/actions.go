@@ -12,7 +12,21 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-var proposalIDPattern = regexp.MustCompile(`^[0-9a-fA-F-]{36}$`)
+var proposalIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}package main
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"regexp"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+)
+
+var proposalIDPattern = )
 
 type confirmRequest struct {
 	ActionID string `json:"action_id"`

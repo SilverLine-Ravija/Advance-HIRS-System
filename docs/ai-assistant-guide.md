@@ -63,3 +63,15 @@ The agent enforces an additional in-process request rate limit of **12 requests 
 - Use manual HRIS forms while the AI service is unavailable.
 
 Read [configuration]({{ '/configuration/' | relative_url }}), [AI implementation]({{ '/agentic-hris/' | relative_url }}) and [troubleshooting]({{ '/troubleshooting/' | relative_url }}).
+
+
+## View or dismiss recent actions
+
+Your assistant workspace now shows recent actions with `pending`, `running`, `completed`, `failed`, `dismissed` or `expired` status. This history is tied to your authenticated account and organization.
+
+- Click **Refresh** to check progress, particularly after a page reload.
+- To discard a pending proposal, choose **Dismiss**. The server changes the database status atomically, preventing later confirmation.
+- To continue an unexpired pending proposal after a reload, review its full preview and use **Review and confirm**.
+- After a timeout or `running` status, verify the leave or attendance record before creating another proposal.
+
+History does not contain full submitted HR data or model messages and is not a substitute for organization audit reporting.

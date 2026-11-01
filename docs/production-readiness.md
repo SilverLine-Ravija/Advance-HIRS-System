@@ -147,3 +147,10 @@ Do not expose placeholder navigation as if these features were implemented.
 7. desktop conflict-resolution UX;
 8. performance/recruiting domains;
 9. evaluate and production-harden the existing permission-aware AI assistant, including provider privacy reviews, prompt-injection tests, spend limits and cross-tenant integration tests.
+
+
+## Separate Compose template is not production approval
+
+The repository provides `docker-compose.production.yml` and an optional private agent overlay to remove seeded demo users and unnecessary host-exposed backend ports. This is a **deployment starting point**, not proof of enterprise security. You must provide managed PostgreSQL, role-specific credentials, an HTTPS reverse proxy, verified backups/restore, rate limits, telemetry, secret storage and company policy review.
+
+The agent action history/dismissal feature improves user recovery, but uncertain backend execution still requires inspection of the authoritative HRIS record before issuing another write. Review [Docker deployment]({{ '/docker-deployment/' | relative_url }}) and [security and privacy]({{ '/security-and-privacy/' | relative_url }}).
