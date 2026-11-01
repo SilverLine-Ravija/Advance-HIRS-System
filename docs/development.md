@@ -1,3 +1,10 @@
+---
+title: Development and local operation
+description: Run, test and debug the HRIS stack, native desktop and agent service.
+section: docs
+permalink: /development/
+---
+
 # Development and local operation
 
 ## Prerequisites
@@ -124,6 +131,19 @@ API_INTERNAL_URL=http://localhost:8080 WEB_COOKIE_SECURE=false npm run dev
 ```
 
 `WEB_COOKIE_SECURE=false` is appropriate only for local HTTP. Production HTTPS should leave it unset or set it to `true`.
+
+## AI assistant development
+
+The agent is an optional Go service started with the Docker Compose overlay:
+
+```sh
+export OPENAI_API_KEY='your-provider-key'
+docker compose -f docker-compose.yml -f docker-compose.agentic.yml up --build
+```
+
+Open `http://localhost:3000/assistant` after signing in. The agent service is private and is reached through the web BFF. Never commit a provider key.
+
+For model configuration, human confirmation, action storage, and security boundaries see [Agentic HRIS implementation]({{ '/agentic-hris/' | relative_url }}).
 
 ## Desktop development
 

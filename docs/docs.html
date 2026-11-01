@@ -1,0 +1,22 @@
+---
+title: Documentation
+description: Browse the Advance HRIS product, developer and operator handbook.
+section: docs
+permalink: /docs/
+---
+<h1>Documentation</h1>
+<p class="lead">Everything you need to understand, run, integrate and operate Advance HRIS. These pages are built directly from the repository's documentation.</p>
+<label for="doc-search" style="font-weight:650;color:#ecf9ef">Find a guide</label>
+<input id="doc-search" class="guide-search" type="search" placeholder="Search topics: agent, API, Docker, security…" aria-label="Filter documentation guides" data-doc-search>
+<p aria-live="polite" data-search-status>Browse all guides</p>
+<div class="guide-grid">
+  <a class="guide-card" href="{{ '/quickstart/' | relative_url }}" data-doc-entry><strong>Quick start ↗</strong><span>Run Docker Compose and open the web and agent surfaces.</span></a>
+  <a class="guide-card" href="{{ '/architecture/' | relative_url }}" data-doc-entry><strong>System architecture ↗</strong><span>Components, tenants, data flow and trust boundaries.</span></a>
+  <a class="guide-card" href="{{ '/agentic-hris/' | relative_url }}" data-doc-entry><strong>Agentic implementation ↗</strong><span>Model integration, action confirmation, scoped tools and limitations.</span></a>
+  <a class="guide-card" href="{{ '/api-reference/' | relative_url }}" data-doc-entry><strong>API reference ↗</strong><span>Auth, employees, leave, attendance, sync and audit endpoints.</span></a>
+  <a class="guide-card" href="{{ '/development/' | relative_url }}" data-doc-entry><strong>Development ↗</strong><span>Local setup, environment configuration, testing and debugging.</span></a>
+  <a class="guide-card" href="{{ '/openchoreo/' | relative_url }}" data-doc-entry><strong>OpenChoreo deployment ↗</strong><span>Deploy the web, API and private agent components.</span></a>
+  <a class="guide-card" href="{{ '/production-readiness/' | relative_url }}" data-doc-entry><strong>Production readiness ↗</strong><span>Security, backups, observability and launch requirements.</span></a>
+  <a class="guide-card" href="{{ '/capabilities/' | relative_url }}" data-doc-entry><strong>Capability map ↗</strong><span>Implemented modules versus planned features.</span></a>
+</div>
+<div class="docs-callout"><strong>New to the project?</strong> Begin with the quick start, then review architecture and the AI implementation guide. The public Pages site is documentation only; it does not host a live HRIS or real employee records.</div>

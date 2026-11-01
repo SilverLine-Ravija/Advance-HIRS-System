@@ -1,49 +1,22 @@
 # Advance HRIS documentation
 
-This directory is the operator and developer handbook for Advance HRIS. The same core guide is also exposed inside the web application at `/docs`.
+The project documentation is published as a GitHub Pages handbook from the `docs/` directory. The same core technical material is also accessible in the web application's `/docs` route.
 
 ## Start here
 
-- [Architecture](architecture.md) — components, trust boundaries, data flows, tenancy, local-first desktop model.
-- [Development and local operation](development.md) — one-command Docker startup, manual development, environment variables, test commands and reset procedures.
-- [API reference](api-reference.md) — authentication, roles, endpoint catalog, examples and response conventions.
-- [Production readiness](production-readiness.md) — deployment checklist, security expectations, backups, migrations, observability and known product boundaries.
-- [OpenChoreo deployment](openchoreo.md) — component split and OpenChoreo-specific deployment guidance.
+- [Product capabilities](capabilities.html) — shipped HR and agent functionality versus future modules.
+- [Quick start](quickstart.html) — run the local stack and optional AI service.
+- [Architecture](architecture.md) — components and tenant boundaries.
+- [Agentic implementation](agentic-hris.md) — AI tools, single-use action confirmation and limitations.
+- [API reference](api-reference.md) — HRIS and assistant endpoints.
+- [Development guide](development.md) — local setup and testing.
+- [OpenChoreo deployment](openchoreo.md) — web, API and private agent components.
+- [Production readiness](production-readiness.md) — security and operational prerequisites.
 
-## Product surface
+## Product status
 
-Advance HRIS currently includes:
+Implemented: employee management and secure invitations; leave policies, balances and approvals; schedule-aware attendance and corrections; local-first desktop synchronization; and a permission-aware AI assistant with explicit confirmation for staged writes.
 
-- multi-tenant organizations and role-based access;
-- secure login through signed JWT access tokens;
-- HttpOnly web sessions through a Next.js BFF;
-- employee directory management for HR/admin;
-- invitation-based onboarding;
-- policy-backed leave with balances, carry-over, holidays and approvals;
-- schedule-aware attendance with corrections and payroll-ready time summaries;
-- audit history;
-- a Wails desktop console with encrypted local employee storage and a durable sync queue.
+Not shipped: payroll and compensation processing, recruiting, performance management, document ingestion/RAG, notification providers, unattended agent jobs, and enterprise-ready SSO/session revocation.
 
-The following are deliberately treated as future product layers rather than partially implemented screens:
-
-- payroll and compensation;
-- performance management;
-- recruiting pipeline;
-- employee document storage/notifications;
-- refresh-token revocation and enterprise SSO/OIDC;
-- desktop conflict-resolution UI;
-- permission-aware AI copilot.
-
-## Fastest MVP start
-
-```bash
-docker compose up --build
-```
-
-Then open:
-
-- Web: http://localhost:3000
-- Docs: http://localhost:3000/docs
-- API health: http://localhost:8080/health
-
-Demo credentials are documented in [development.md](development.md). They are for local use only.
+GitHub Pages only hosts the **public documentation**. It does not run the HRIS, connect to customer databases, or expose a production AI assistant.

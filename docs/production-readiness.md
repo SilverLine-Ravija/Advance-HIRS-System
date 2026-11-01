@@ -1,3 +1,10 @@
+---
+title: Production readiness
+description: Release checklist covering authentication, data security, monitoring and AI service controls.
+section: docs
+permalink: /production-readiness/
+---
+
 # Production readiness
 
 Advance HRIS has a solid MVP foundation, but production deployment requires operational controls around it.
@@ -69,6 +76,18 @@ Validate:
 
 Current access tokens are stateless and expire after eight hours. Refresh-token revocation, user session management and SSO/OIDC are future layers.
 
+### AI service production controls
+
+If the optional agent is enabled, additionally require:
+
+- a private-only agent network endpoint and service-to-service authentication controls;
+- a dedicated least-privilege database role restricted to agent action state;
+- provider privacy and retention agreements, data minimization, and evaluation of prompt-injection failure modes;
+- token and spend limits, durable action-status reconciliation, tenant-scoping tests and audit monitoring;
+- a tested manual fallback for all sensitive HR operations.
+
+The presence of an AI implementation does not imply authorization to process live employee data.
+
 ## Deployment health gates
 
 A deployment should not receive traffic until:
@@ -113,7 +132,7 @@ These are not complete product modules yet:
 - employee document repository and notification delivery;
 - enterprise SSO/OIDC and refresh-token revocation;
 - full desktop conflict-resolution UI;
-- AI HR copilot.
+- a production-hardened AI HR copilot (an initial permission-aware assistant now exists, but needs vendor privacy review, stronger abuse controls and operational validation).
 
 Do not expose placeholder navigation as if these features were implemented.
 
@@ -127,4 +146,4 @@ Do not expose placeholder navigation as if these features were implemented.
 6. document storage and notification provider abstraction;
 7. desktop conflict-resolution UX;
 8. performance/recruiting domains;
-9. permission-aware AI copilot only after domain permissions are stable.
+9. evaluate and production-harden the existing permission-aware AI assistant, including provider privacy reviews, prompt-injection tests, spend limits and cross-tenant integration tests.

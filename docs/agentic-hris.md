@@ -1,3 +1,10 @@
+---
+title: AI agent implementation
+description: Agent orchestration, scoped HR tools, confirmation, security model and limitations.
+section: docs
+permalink: /agentic-hris/
+---
+
 # Agentic HRIS: Implementation guide
 
 This increment adds an authenticated AI assistant without replacing existing business logic. **The HRIS API continues to enforce tenant isolation, leave accounting, manager scope and other domain invariants.** Agent tools cannot access the PostgreSQL HR data tables directly.
@@ -18,7 +25,7 @@ Not shipped: payroll computations, candidate recruiting pipeline, employee docum
 
 ## Running in local development
 
-1. Copy these new files into the corresponding paths in the HRIS checkout (or apply the companion patch). The existing migrations script automatically runs `005_agent_actions.sql`.
+1. Clone the current repository and check out the default branch. The existing migrations script automatically runs `005_agent_actions.sql`.
 2. Set an OpenAI-compatible provider key in your local environment. Never commit it or expose it through `NEXT_PUBLIC_` variables.
 3. Start the stack:
 

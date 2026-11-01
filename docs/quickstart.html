@@ -1,0 +1,26 @@
+---
+title: Quick start
+description: Run the Advance HRIS web application and agentic workflows locally with Docker.
+section: docs
+permalink: /quickstart/
+---
+<h1>Quick start</h1>
+<p>Advance HRIS is a multi-component application, not a hosted application on GitHub Pages. This guide walks through a local test environment.</p>
+<h2>Prerequisites</h2>
+<ul><li>Git</li><li>Docker Engine / Docker Desktop with Compose v2</li><li>An OpenAI-compatible API key to enable the optional AI service</li></ul>
+<h2>1. Clone and start core HRIS</h2>
+<pre><code>git clone https://github.com/SilverLine-Ravija/Advance-HIRS-System.git
+cd Advance-HIRS-System
+docker compose up --build</code></pre>
+<p>The base stack brings up PostgreSQL, applies migrations, starts the Go business API and then starts Next.js.</p>
+<p>Open <a href="http://localhost:3000">localhost:3000</a> and check <a href="http://localhost:8080/health">localhost:8080/health</a> from your development machine.</p>
+<h2>2. Enable the AI assistant</h2>
+<p>For local development only, provide a model provider key and start the agent overlay. Never commit secrets or expose the agent directly to the public internet.</p>
+<pre><code>export OPENAI_API_KEY='your-provider-key'
+docker compose -f docker-compose.yml -f docker-compose.agentic.yml up --build</code></pre>
+<p>Sign in to the web portal and open <a href="http://localhost:3000/assistant">localhost:3000/assistant</a>. The model provider must support OpenAI-compatible tool calling. The agent is a private component and uses the existing authenticated Go HRIS endpoints.</p>
+<h2>3. Try a governed action</h2>
+<ol><li>Ask the assistant to check an authorized leave balance or list your pending requests.</li><li>Ask it to prepare a leave request.</li><li>Review the proposed action and confirm it only in the local demo environment.</li><li>Check the result in the Leave workspace. Manager approval still follows the normal HRIS policy.</li></ol>
+<div class="docs-callout"><strong>Use synthetic employee data.</strong> Local bootstrap/demo credentials in the repository are not intended for production. Before using real personnel data, follow the <a href="{{ '/production-readiness/' | relative_url }}">production readiness checklist</a> and review the <a href="{{ '/agentic-hris/' | relative_url }}">AI security model</a>.</div>
+<h2>More resources</h2>
+<ul><li><a href="{{ '/development/' | relative_url }}">Full development guide</a></li><li><a href="{{ '/api-reference/' | relative_url }}">Go HRIS API reference</a></li><li><a href="{{ '/openchoreo/' | relative_url }}">OpenChoreo deployment model</a></li><li><a href="https://github.com/SilverLine-Ravija/Advance-HIRS-System/issues">Report an issue</a></li></ul>

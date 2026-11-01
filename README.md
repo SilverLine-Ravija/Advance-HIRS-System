@@ -60,8 +60,11 @@ The repository documentation is organized as a handbook:
 - [API reference](docs/api-reference.md)
 - [Production readiness](docs/production-readiness.md)
 - [OpenChoreo deployment](docs/openchoreo.md)
+- [AI assistant implementation](docs/agentic-hris.md)
 
 The same operator/developer guide is available in the web application at `/docs`.
+
+The public product and documentation website is built from `docs/` using GitHub Pages and the [Pages workflow](.github/workflows/pages.yml). Once Pages is enabled with **GitHub Actions** as its source and the workflow has deployed from `main`, the website is expected at `https://silverline-ravija.github.io/Advance-HIRS-System/`.
 
 ## Run locally with Docker
 

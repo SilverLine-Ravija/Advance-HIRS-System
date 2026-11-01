@@ -1,0 +1,27 @@
+---
+title: Capabilities
+description: Explore implemented Advance HRIS modules and clearly labeled future product capabilities.
+permalink: /capabilities/
+---
+<section class="page-hero"><div class="container"><span class="eyebrow">PRODUCT OVERVIEW</span><h1>Everything you can do<br>with Advance HRIS.</h1><p class="lead">A transparent capability map based on the current source code. Features labeled implemented exist in the repository; future modules are explicitly marked.</p></div></section>
+<section class="cap-section"><div class="container"><span class="eyebrow">CURRENT FOUNDATION</span><h2>Core HR workflows</h2><div class="cap-list">
+  <div><span class="status-pill">Implemented</span><h3>Employee records and access</h3><p>Create, update, archive and browse employee profiles. Role-scoped visibility, manager/direct-report relationships, one-time invitations and organization access management.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Policy-backed leave</h3><p>Entitlement rules, policy variants, annual carry-over, balances, holidays, half-day requests, overlap protection and manager approvals with transactional ledger accounting.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Schedule-aware attendance</h3><p>Assigned work schedules, grace minutes, check-in/out, overtime, missing or incorrect time record correction workflows and payroll-period summary endpoints.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Local-first desktop console</h3><p>Wails + React HR/admin interface, AES-256-GCM encrypted local employee payloads, OS-keychain-protected sessions and version-aware offline sync.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Multi-tenant security model</h3><p>Organization-scoped PostgreSQL records, JWT access, role enforcement, SameSite/HttpOnly web sessions and auditable HR workflow events.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Human-in-the-loop AI assistant</h3><p>Role-scoped conversational tools for leave, attendance and selected HR workflows. Proposed mutations are saved as single-use actions and require explicit confirmation.</p></div>
+</div></div></section>
+<section class="cap-section surface"><div class="container"><span class="eyebrow">AGENTIC WORKFLOWS</span><h2>Useful AI with accountability.</h2><div class="cap-list">
+  <div><span class="status-pill">Implemented</span><h3>Read what you are allowed to see</h3><p>Retrieve authorized balances, leave policies, holidays, attendance, corrections and workforce summaries through existing protected APIs.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Prepare, preview and confirm</h3><p>Draft leave submissions, attendance corrections, manager review actions and limited HR record changes before they are actually executed.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Single-use action proposals</h3><p>PostgreSQL-stored proposals bind an action to actor and tenant, expire after ten minutes and guard against concurrent duplicate confirmations.</p></div>
+  <div><span class="status-pill">Implemented</span><h3>Separate deployable component</h3><p>Go agent service behind the Next.js server-side proxy. The HRIS API remains authoritative for every domain and authorization decision.</p></div>
+</div><div class="detail-banner">The assistant does not automatically approve leave, hire people, calculate final payroll, access other tenants or execute unconfirmed writes. <a class="text-link" href="{{ '/agentic-hris/' | relative_url }}">Read implementation details ↗</a></div></div></section>
+<section class="cap-section"><div class="container"><span class="eyebrow">ON THE ROADMAP</span><h2>Planned, not yet shipping.</h2><div class="cap-list">
+  <div><span class="status-pill planned">Planned</span><h3>Payroll and compensation</h3><p>Pay runs, statutory compliance, compensation administration and payments are not implemented. Attendance period summaries provide an integration boundary only.</p></div>
+  <div><span class="status-pill planned">Planned</span><h3>Recruitment and performance</h3><p>Applicant tracking, hiring automation, performance goals and reviews require dedicated workflows and governance.</p></div>
+  <div><span class="status-pill planned">Planned</span><h3>Documents and notifications</h3><p>Employee document management, company handbook retrieval and email/Slack/Teams notifications are future integrations.</p></div>
+  <div><span class="status-pill planned">Planned</span><h3>Enterprise operational hardening</h3><p>SSO/OIDC, session revocation, centralized rate limiting, disaster recovery verification and advanced observability need production implementation.</p></div>
+</div></div></section>
+<section class="cta-section"><div class="container"><h2>Want implementation-level detail?</h2><p>Read the API routes, architecture constraints, local setup instructions and security checklist.</p><a class="btn btn-primary" href="{{ '/docs/' | relative_url }}">Explore the handbook →</a></div></section>
