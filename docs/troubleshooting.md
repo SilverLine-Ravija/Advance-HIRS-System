@@ -81,3 +81,11 @@ Open `/assistant` and use the **Recent actions** panel. The authenticated action
 Use `docker compose -f docker-compose.production.yml config --quiet` with the required environment variables supplied. Missing `DATABASE_URL`, `MIGRATION_DATABASE_URL`, `JWT_SECRET` or `WEB_ORIGIN` fail intentionally. The production stack **does not provision a PostgreSQL server or any demo organization**. Verify your database endpoint, network rules, controlled migration role and first-admin provisioning separately.
 
 See [Docker deployment]({{ '/docker-deployment/' | relative_url }}).
+
+## Sign-out reports "could not verify secure sign out"
+
+The Next.js app keeps the cookie when it cannot confirm that the Go API revoked the token. Check API network connectivity and PostgreSQL availability, then retry sign-out. Do not assume a token is revoked if its revocation call timed out. Once the API responds with 200 or the session is already invalid (401), the cookie is cleared.
+
+## Access suddenly returns 401 after an admin changes permissions
+
+This is expected: the API checks current membership status and role for every request, rather than trusting an older JWT role for eight hours. If the user remains authorized, sign in again to obtain a token reflecting the updated role.

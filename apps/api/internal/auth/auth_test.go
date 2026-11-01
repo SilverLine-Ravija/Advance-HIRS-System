@@ -21,7 +21,7 @@ func TestManagerIssueAndParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if claims.UserID != "user-1" || claims.OrganizationID != "org-1" || claims.Role != "admin" {
+	if claims.UserID != "user-1" || claims.OrganizationID != "org-1" || claims.Role != "admin" || claims.ID == "" {
 		t.Fatalf("unexpected claims: %#v", claims)
 	}
 }
@@ -43,4 +43,20 @@ func TestPasswordHashing(t *testing.T) {
 	if CheckPassword(hash, "wrong-password") {
 		t.Fatal("expected wrong password to be rejected")
 	}
+}
+
+// Even two logins issued in the same second must produce independently revocable JWTs.
+func TestManagerTokensHaveUniqueIDs(t *testing.T) {
+	manager, err := NewManager("0123456789abcdef0123456789abcdef", time.Hour)
+	if err != nil { t.Fatal(err) }
+	first, _, err := manager.Issue("user-1", "a@example.test", "User", "org-1", "Test", "employee")
+	if err != nil { t.Fatal(err) }
+	second, _, err := manager.Issue("user-1", "a@example.test", "User", "org-1", "Test", "employee")
+	if err != nil { t.Fatal(err) }
+	if first == second { t.Fatal("distinct logins must not share a token") }
+	c1, err := manager.Parse(first)
+	if err != nil { t.Fatal(err) }
+	c2, err := manager.Parse(second)
+	if err != nil { t.Fatal(err) }
+	if c1.ID == "" || c2.ID == "" || c1.ID == c2.ID { t.Fatal("expected unique random JWT IDs") }
 }

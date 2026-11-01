@@ -14,7 +14,7 @@ Advance HRIS processes personnel records, attendance and leave data. Its current
 | Layer | Implemented boundary | Remaining production work |
 | --- | --- | --- |
 | Browser | Server-side Next.js BFF and HttpOnly/SameSite cookie | Session revocation, CSRF review and abuse protection |
-| Go HRIS API | JWT validation, role checks and tenant-scoped queries | Enterprise SSO/OIDC, centralized controls and security review |
+| Go HRIS API | JWT validation, role checks, active-membership enforcement, hashed session revocation and tenant-scoped queries | SSO/OIDC, refresh token rotation, centralized controls and security review |
 | PostgreSQL | Organization-scoped records and transactional leave/attendance workflows | Managed backups, least-privilege database users and tested restores |
 | Desktop | AES-256-GCM encrypted SQLite payloads, OS keychain token storage | Device posture, lost-device response and mature conflict resolution UX |
 | AI service | Authenticated tools, allowed operations, user-bound proposed actions | Model privacy review, prompt-injection evaluation, ingress throttling and ongoing monitoring |
@@ -65,3 +65,9 @@ The current suite has integration tests for major HR boundaries, but additional 
 If you believe you've found a vulnerability, avoid posting real data or exploit details publicly. Contact the repository maintainers through an appropriate private security channel if configured, or open a non-sensitive issue asking for a secure reporting channel. The repository currently has no documented formal security response policy.
 
 Related: [Production readiness]({{ '/production-readiness/' | relative_url }}) · [Roles and tenancy]({{ '/access-and-tenancy/' | relative_url }}) · [Agent implementation]({{ '/agentic-hris/' | relative_url }}).
+
+## Revocable access sessions
+
+The API now blocks already-signed-out bearer tokens using a hashed revocation list in PostgreSQL, and checks the account and organization membership status/role on **every** protected request. Login tokens include a random unique ID to prevent two same-second sessions from sharing an identical signed value. The Next.js logout route calls the Go API first and only clears the cookie if revocation succeeds (or the JWT has already expired/been revoked).
+
+Do not treat this as a complete identity platform. There is no SSO/OIDC, refresh-token rotation, device inventory, global logout, or distributed credential-stuffing defense yet. Revocation checks fail closed if PostgreSQL is unavailable; monitor database latency. Retain only token digests, and clean up records after the token expiration according to a controlled retention job.

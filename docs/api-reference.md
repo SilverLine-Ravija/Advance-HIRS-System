@@ -281,3 +281,11 @@ Refer to [Agentic HRIS implementation]({{ '/agentic-hris/' | relative_url }}) fo
 - Use HTTPS outside local development.
 - Rotate `JWT_SECRET` through a secret-management process.
 - Enforce network/database backups separately from application authorization.
+
+## Session revocation
+
+`POST /api/v1/auth/logout` requires the current bearer token. It writes only a SHA-256 digest of the signed JWT into the revocation table, responds `{"revoked":true}` and makes all subsequent requests using that token return 401. Another token from the same user remains valid, unless their membership has changed or been disabled.
+
+The Next.js `POST /api/session/logout` endpoint calls the Go API before deleting its HttpOnly cookie. If the backend cannot confirm revocation, it responds with 503 and retains the cookie so the user can retry. If the token is already expired or revoked, local cookie clearance is safe.
+
+Every protected Go API endpoint now verifies the current user and organization membership status and role in PostgreSQL. Database failure produces HTTP 503; old tokens after role changes or membership deactivation produce HTTP 401.

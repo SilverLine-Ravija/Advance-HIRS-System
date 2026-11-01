@@ -18,7 +18,7 @@ This is a source-backed status overview, **not** a statement of product availabi
 | Leave | Policies, balances, carry-over, holidays, manager review and ledger |
 | Attendance | Timekeeping, schedules, corrections, period summaries |
 | Desktop | Wails/React interface, encrypted local employee records and sync queue |
-| Platform | Tenant-aware Go API, PostgreSQL and audit records |
+| Platform | Tenant-aware Go API, PostgreSQL, audit records and revocable JWT sessions |
 | Agent | Authenticated tool calls, role allowlisting, single-use confirmed writes, action history and dismissal |
 | Documentation | GitHub Pages product site, operator guides and API examples |
 
@@ -27,7 +27,7 @@ Implemented in code does **not** mean every edge case is audited or suitable for
 ## Near-term engineering priorities
 
 1. **Reliability:** test all role/tenant boundaries, action-result reconciliation and real user workflows.
-2. **Security:** implement session revocation/refresh flow, SSO/OIDC, centralized rate limits, secret isolation and model-provider controls.
+2. **Security:** expand single-session revocation into refresh-token rotation and SSO/OIDC; add centralized rate limits, device/session management, secret isolation and model-provider controls.
 3. **Operations:** structured logs/traces/metrics, backup restore drills, migration versioning and incident response procedures.
 4. **User experience:** accessible policy forms, desktop conflict resolution UI, role-specific navigation and better error recovery.
 5. **Customer validation:** select one measurable HR automation use case and demonstrate a real labor/time saving with pilot customers.

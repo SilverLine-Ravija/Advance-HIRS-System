@@ -29,11 +29,12 @@ This table summarizes the implemented endpoints. Some HR/admin self-service API 
 
 1. Client posts credentials plus `organization_slug` to `POST /api/v1/auth/login`.
 2. Server verifies the password using bcrypt and resolves an organization membership.
-3. The API issues a signed **HS256 JWT** with user, organization and role claims.
+3. The API issues a signed **HS256 JWT** with a random unique session ID and user, organization and role claims.
 4. Next.js stores the token in an HttpOnly/SameSite cookie behind its BFF. The browser does not need access to the bearer token.
-5. On each protected API call, the Go service validates the JWT and enforces role, organization and manager report scope.
+5. On each protected API call, the Go service verifies signature and expiry, checks the SHA-256 token digest against the PostgreSQL revocation list, and verifies the user is active with an active membership whose role still matches the token.
+6. A sign-out calls `POST /api/v1/auth/logout` to revoke the specific bearer token **before** the Next.js application clears its HttpOnly cookie.
 
-The current access token lifetime is **eight hours**. Refresh token revocation, SSO/OIDC and centralized session management are future hardening work.
+Access tokens still expire after **eight hours**; however, a sign-out now invalidates that particular token immediately. Disabling a user, disabling the organization membership or changing a role also blocks old tokens at the next protected request. Other active sessions remain signed in. **Refresh tokens, SSO/OIDC and a user-facing multi-device session management interface remain future work.**
 
 ## Organization isolation
 
@@ -65,3 +66,17 @@ Accept invitations through the trusted `/accept?token=...` workflow, not through
 Do not enable demo bootstrap credentials on shared environments. Use TLS, server-side rate limits, secure cookies, secret-manager injection, role audits, session-revocation work and regularly tested backups before production.
 
 Read [security and privacy]({{ '/security-and-privacy/' | relative_url }}) and [production readiness]({{ '/production-readiness/' | relative_url }}).
+
+## Revocation storage and operations
+
+The `revoked_sessions` PostgreSQL table stores the **SHA-256 digest of the complete signed JWT**, with actor, organization and expiration metadata. It does not store raw bearer tokens. Migration `007_revocable_sessions.sql` creates it idempotently.
+
+Validation is fail-closed: if the session database is unavailable, protected endpoints respond with HTTP 503 instead of accepting the JWT without checking revocation. This is intentional, and it makes database availability part of the authentication service's availability requirement.
+
+Expired revocation entries can be purged by an authenticated maintenance job:
+
+```sql
+DELETE FROM revoked_sessions WHERE expires_at < now();
+```
+
+This cleanup is **not automatically scheduled** in this increment. Multi-device logout, centralized refresh tokens, SSO and account recovery need separate work.

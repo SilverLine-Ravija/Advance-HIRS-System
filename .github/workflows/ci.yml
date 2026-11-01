@@ -147,6 +147,23 @@ jobs:
           curl -sf http://localhost:8080/api/v1/leave/requests "${JONAS_AUTH[@]}" \
             | python3 -c 'import json,sys; assert "data" in json.load(sys.stdin)'
 
+          # Explicit logout revokes only the selected token; another login remains valid.
+          REVOKABLE_ADMIN_TOKEN=$(curl -sf -X POST http://localhost:8080/api/v1/auth/login "${JSON[@]}" \
+            -d '{"email":"admin@advancehris.local","password":"ci-admin-password-2026","organization_slug":"northstar"}' \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+          test "$REVOKABLE_ADMIN_TOKEN" != "$ADMIN_TOKEN"
+          curl -sf http://localhost:8080/api/v1/auth/me \
+            -H "Authorization: Bearer $REVOKABLE_ADMIN_TOKEN" >/dev/null
+          curl -sf -X POST http://localhost:8080/api/v1/auth/logout \
+            -H "Authorization: Bearer $REVOKABLE_ADMIN_TOKEN" \
+            | python3 -c 'import json,sys; assert json.load(sys.stdin)["revoked"] is True'
+          REVOKED_STATUS=$(curl -s -o /tmp/revoked-session.json -w '%{http_code}' \
+            http://localhost:8080/api/v1/auth/me \
+            -H "Authorization: Bearer $REVOKABLE_ADMIN_TOKEN")
+          test "$REVOKED_STATUS" = "401"
+          # The earlier admin session still works (per-device revocation).
+          curl -sf http://localhost:8080/api/v1/auth/me "${ADMIN_AUTH[@]}" >/dev/null
+
           ADMIN_LEAVE_ID=$(curl -sf -X POST http://localhost:8080/api/v1/leave/requests \
             "${ADMIN_AUTH[@]}" "${JSON[@]}" \
             -d '{"employee_id":"emp_001","leave_type":"annual","start_date":"2026-09-20","end_date":"2026-09-21","reason":"CI admin workflow"}' \
@@ -256,6 +273,12 @@ jobs:
             | python3 -c 'import json,sys; assert json.load(sys.stdin)["authenticated"] is True'
           curl -sf -b "$COOKIE_JAR" http://localhost:3000/api/hr/auth/me \
             | python3 -c 'import json,sys; assert json.load(sys.stdin)["user"]["role"] == "admin"'
+          curl -sf -X POST -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
+            http://localhost:3000/api/session/logout \
+            | python3 -c 'import json,sys; assert json.load(sys.stdin)["authenticated"] is False'
+          LOGGED_OUT_STATUS=$(curl -s -o /tmp/logout-check.json -w '%{http_code}' \
+            -b "$COOKIE_JAR" http://localhost:3000/api/hr/auth/me)
+          test "$LOGGED_OUT_STATUS" = "401"
       - name: Show Compose logs on failure
         if: failure()
         run: docker compose logs --no-color
