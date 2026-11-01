@@ -3,7 +3,7 @@ import styles from "./docs.module.css";
 
 export const metadata: Metadata = {
   title: "Documentation | Advance HRIS",
-  description: "Product, developer, API, Docker and production documentation for Advance HRIS.",
+  description: "Product and developer documentation, with a link to the complete public Advance HRIS handbook.",
 };
 
 const endpointGroups = [
@@ -74,14 +74,14 @@ export default function DocsPage() {
       <header className={styles.hero}>
         <nav className={styles.topnav}>
           <a className={styles.brand} href="/"><span>A</span><strong>Advance HRIS</strong></a>
-          <div><a href="#quickstart">Quick start</a><a href="#architecture">Architecture</a><a href="#api">API</a><a href="#production">Production</a><a href="/">Open app</a></div>
+          <div><a href="#quickstart">Quick start</a><a href="#architecture">Architecture</a><a href="#api">API</a><a href="#production">Production</a><a href="https://silverline-ravija.github.io/Advance-HIRS-System/docs/" target="_blank" rel="noopener noreferrer">Full handbook ↗</a><a href="/">Open app</a></div>
         </nav>
         <div className={styles.heroGrid}>
           <div>
             <p className={styles.kicker}>PRODUCT + DEVELOPER DOCUMENTATION</p>
             <h1>Build, run and operate Advance HRIS with one source of truth.</h1>
-            <p className={styles.lead}>Advance HRIS is a multi-tenant HR platform with a Next.js employee portal, Go API, PostgreSQL system of record and a Wails local-first HR desktop console.</p>
-            <div className={styles.actions}><a className={styles.primary} href="#quickstart">Run the MVP</a><a className={styles.secondary} href="https://github.com/savisaluwadana/Advance-HIRS-System">View repository</a></div>
+            <p className={styles.lead}>Advance HRIS combines a Next.js portal, Go API, PostgreSQL, Wails local-first desktop console and an optional permission-aware AI assistant. This page is a concise in-app reference. The complete maintained handbook covers every user role and technical subsystem.</p>
+            <div className={styles.actions}><a className={styles.primary} href="https://silverline-ravija.github.io/Advance-HIRS-System/docs/" target="_blank" rel="noopener noreferrer">Complete handbook ↗</a><a className={styles.secondary} href="https://github.com/SilverLine-Ravija/Advance-HIRS-System">View repository</a></div>
           </div>
           <aside className={styles.commandCard}>
             <span>ONE-COMMAND MVP</span>
@@ -178,7 +178,7 @@ export default function DocsPage() {
         <div className={styles.checklist}>{productionChecklist.map((item) => <div key={item}><span>✓</span><p>{item}</p></div>)}</div>
         <div className={styles.boundary}>
           <h3>Deliberately not presented as complete</h3>
-          <p>Payroll/compensation, performance management, recruitment, employee document storage/notifications, enterprise SSO/OIDC, refresh-token revocation, full desktop conflict-resolution UX and the AI HR copilot remain future layers. Placeholder navigation should not be treated as shipped functionality.</p>
+          <p>Payroll/compensation, performance management, recruitment, employee document storage/notifications, enterprise SSO/OIDC, refresh-token revocation, full desktop conflict-resolution UX, unattended agent workflows and advanced AI document retrieval remain future layers. A permission-aware AI assistant now exists, but still needs production security and operational hardening. Placeholder navigation should not be treated as shipped functionality.</p>
         </div>
       </section>
 
@@ -192,7 +192,7 @@ export default function DocsPage() {
         </div>
       </section>
 
-      <footer className={styles.footer}><div><strong>Advance HRIS</strong><span>Documentation mirrors the repository guides under <code>docs/</code>.</span></div><a href="/">Back to application</a></footer>
+      <footer className={styles.footer}><div><strong>Advance HRIS</strong><span>In-app summary. The complete public handbook is published from <code>docs/</code>.</span></div><a href="/">Back to application</a></footer>
     </main>
   );
 }
