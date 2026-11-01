@@ -1,0 +1,50 @@
+name: Agent CI
+"on":
+  push:
+    paths:
+      - 'apps/agent/**'
+      - 'db/migrations/005_agent_actions.sql'
+      - '.github/workflows/agent-ci.yml'
+  pull_request:
+    paths:
+      - 'apps/agent/**'
+      - 'db/migrations/005_agent_actions.sql'
+      - '.github/workflows/agent-ci.yml'
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: hris
+          POSTGRES_USER: hris
+          POSTGRES_PASSWORD: hris
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hris -d hris"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      AGENT_TEST_DATABASE_URL: postgres://hris:hris@localhost:5432/hris?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache-dependency-path: apps/agent/go.mod
+      - name: Prepare HRIS schema
+        env:
+          DATABASE_URL: postgres://hris:hris@localhost:5432/hris?sslmode=disable
+        run: bash db/migrate.sh
+      - name: Test agent tools and one-time action integration
+        working-directory: apps/agent
+        run: go test -mod=mod -race ./...
+      - name: Vet agent
+        working-directory: apps/agent
+        run: go vet -mod=mod ./...
+      - name: Build container
+        run: docker build -t advance-hris-agent:ci ./apps/agent
