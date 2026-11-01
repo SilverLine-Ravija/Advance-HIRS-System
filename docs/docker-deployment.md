@@ -40,7 +40,7 @@ bash scripts/agent-docker-smoke.sh
 
 The test starts the full local stack with `docker-compose.ci-agentic.yml` and a deterministic local `mock-model` container. It verifies user login, HRIS read tools, preparation and dismissal of a leave request, rejection of a dismissed proposal, successful confirmation of another proposal and action history. It uses synthetic employees only.
 
-The script cleans up its containers and database volume. Run it in a disposable development environment rather than against an existing Docker Compose project with persistent data.
+The smoke test uses its own unique Compose project and isolated data volume, with separate host ports (web `3310`, API `8188`, PostgreSQL `55433` by default), then removes only its own temporary containers and volume. Avoid running competing smoke tests on the same ports.
 
 ## 3. Production-style reference configuration
 

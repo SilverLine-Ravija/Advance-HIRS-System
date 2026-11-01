@@ -3,7 +3,11 @@
 # Uses synthetic local demo data and the mock model provider, never a real AI key.
 set -euo pipefail
 export OPENAI_API_KEY="ci-mock-model-key-not-a-secret"
-COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.agentic.yml -f docker-compose.ci-agentic.yml)
+# Keep the smoke test isolated from an existing local HRIS data volume/project.
+export HRIS_WEB_PORT="${HRIS_TEST_WEB_PORT:-3310}"
+export HRIS_API_PORT="${HRIS_TEST_API_PORT:-8188}"
+export HRIS_POSTGRES_PORT="${HRIS_TEST_POSTGRES_PORT:-55433}"
+COMPOSE=(docker compose -p "advance-hris-agent-smoke-$$" -f docker-compose.yml -f docker-compose.agentic.yml -f docker-compose.ci-agentic.yml)
 COOKIE_JAR=$(mktemp)
 TMP_BODY=$(mktemp)
 cleanup() {
@@ -30,18 +34,18 @@ docker compose -f docker-compose.production.yml -f docker-compose.production.age
 
 "${COMPOSE[@]}" config --quiet
 "${COMPOSE[@]}" up -d --build --wait
-curl --fail --silent http://localhost:8080/health >/dev/null
-curl --fail --silent http://localhost:3000/docs >/dev/null
+curl --fail --silent http://localhost:$HRIS_API_PORT/health >/dev/null
+curl --fail --silent http://localhost:$HRIS_WEB_PORT/docs >/dev/null
 
-curl --fail --silent --show-error -c "$COOKIE_JAR" -X POST http://localhost:3000/api/session/login \
+curl --fail --silent --show-error -c "$COOKIE_JAR" -X POST http://localhost:$HRIS_WEB_PORT/api/session/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"ava@northstar.local","password":"local-demo-password-2026","organization_slug":"northstar"}' \
   | python3 -c 'import json,sys; assert json.load(sys.stdin)["authenticated"] is True'
 
-curl --fail --silent -b "$COOKIE_JAR" http://localhost:3000/api/agent/actions?limit=10 \
+curl --fail --silent -b "$COOKIE_JAR" http://localhost:$HRIS_WEB_PORT/api/agent/actions?limit=10 \
   | python3 -c 'import json,sys; assert json.load(sys.stdin)["data"] == []'
 
-curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST http://localhost:3000/api/agent/chat \
+curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST http://localhost:$HRIS_WEB_PORT/api/agent/chat \
   -H 'Content-Type: application/json' \
   -d '{"message":"Check my annual leave balance","history":[]}' \
   | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["reply"] and not d["pending_actions"]'
@@ -53,26 +57,26 @@ MESSAGE="Prepare annual leave from $START to $END"
 
 prepare() {
   python3 -c 'import json,sys; print(json.dumps({"message": sys.argv[1], "history": []}))' "$MESSAGE" |
-    curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST http://localhost:3000/api/agent/chat \
+    curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST http://localhost:$HRIS_WEB_PORT/api/agent/chat \
       -H 'Content-Type: application/json' --data-binary @-
 }
 FIRST=$(prepare)
 FIRST_ID=$(printf '%s' "$FIRST" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d["pending_actions"])==1; print(d["pending_actions"][0]["id"])')
-curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST "http://localhost:3000/api/agent/actions/$FIRST_ID/dismiss" \
+curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST "http://localhost:$HRIS_WEB_PORT/api/agent/actions/$FIRST_ID/dismiss" \
   -H 'Content-Type: application/json' -d '{}' \
   | python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "dismissed"'
 
-CODE=$(curl -s -o "$TMP_BODY" -w '%{http_code}' -b "$COOKIE_JAR" -X POST http://localhost:3000/api/agent/confirm \
+CODE=$(curl -s -o "$TMP_BODY" -w '%{http_code}' -b "$COOKIE_JAR" -X POST http://localhost:$HRIS_WEB_PORT/api/agent/confirm \
   -H 'Content-Type: application/json' -d "{\"action_id\":\"$FIRST_ID\"}")
 test "$CODE" = "409"
 
 SECOND=$(prepare)
 SECOND_ID=$(printf '%s' "$SECOND" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d["pending_actions"])==1; print(d["pending_actions"][0]["id"])')
-curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST http://localhost:3000/api/agent/confirm \
+curl --fail --silent --show-error -b "$COOKIE_JAR" -X POST http://localhost:$HRIS_WEB_PORT/api/agent/confirm \
   -H 'Content-Type: application/json' -d "{\"action_id\":\"$SECOND_ID\"}" \
   | python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "completed"'
 
-curl --fail --silent --show-error -b "$COOKIE_JAR" http://localhost:3000/api/agent/actions?limit=10 \
+curl --fail --silent --show-error -b "$COOKIE_JAR" http://localhost:$HRIS_WEB_PORT/api/agent/actions?limit=10 \
   | python3 -c 'import json,sys; d=json.load(sys.stdin); statuses={x["status"] for x in d["data"]}; assert {"dismissed","completed"}.issubset(statuses), statuses'
 
 echo "PASS: BFF session, model tool calls, read scopes, staged mutation, one-time dismiss, confirmation and history."
