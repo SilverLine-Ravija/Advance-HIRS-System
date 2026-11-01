@@ -18,6 +18,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Validate the separate production Compose model using only placeholder credentials.
+MIGRATION_DATABASE_URL='postgres://migrator:ci@db:5432/hris' \
+DATABASE_URL='postgres://app:ci@db:5432/hris' \
+AGENT_DATABASE_URL='postgres://agent:ci@db:5432/hris' \
+JWT_SECRET='ci-placeholder-signing-key-not-for-production-0123456789' \
+WEB_ORIGIN='https://ci.example.invalid' \
+OPENAI_API_KEY='ci-mock-model-key-not-a-secret' \
+docker compose -f docker-compose.production.yml -f docker-compose.production.agentic.yml config --format json \
+  | python3 scripts/check-production-compose.py
+
 "${COMPOSE[@]}" config --quiet
 "${COMPOSE[@]}" up -d --build --wait
 curl --fail --silent http://localhost:8080/health >/dev/null
