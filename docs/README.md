@@ -10,7 +10,8 @@ The project documentation is published as a GitHub Pages handbook from the `docs
 - [Agentic implementation](agentic-hris.md) — AI tools, single-use action confirmation and limitations.
 - [API reference](api-reference.md) — HRIS and assistant endpoints.
 - [Development guide](development.md) — local setup and testing.
-- [OpenChoreo deployment](openchoreo.md) — web, API and private agent components.
+- [OpenChoreo deployment](openchoreo.md)
+- [Docker deployment](docker-deployment.md) — web, API and private agent components.
 - [Production readiness](production-readiness.md) — security and operational prerequisites.
 
 ## Product status

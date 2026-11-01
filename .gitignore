@@ -11,11 +11,12 @@ bin/
 *.test
 coverage.out
 
-# env
+# Local secrets: only checked-in empty templates are allowed
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
+!.env.agent.example
+!.env.production.example
 
 # OS / editors
 .DS_Store

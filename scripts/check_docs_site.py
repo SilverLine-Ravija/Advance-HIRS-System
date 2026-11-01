@@ -20,6 +20,7 @@ EXPECTED = {
     "/api-reference/", "/api-recipes/", "/data-model/", "/agentic-hris/",
     "/configuration/", "/development/", "/openchoreo/", "/testing/",
     "/security-and-privacy/", "/production-readiness/", "/troubleshooting/",
+    "/docker-deployment/",
     "/roadmap/", "/faq/", "/glossary/", "/contributing/"
 }
 
@@ -97,7 +98,7 @@ def check() -> int:
             errors.append(f"layout: unknown route {dest}")
     for required in (
         "/employee-guide/", "/manager-guide/", "/hr-admin-guide/",
-        "/api-recipes/", "/security-and-privacy/", "/troubleshooting/"
+        "/api-recipes/", "/security-and-privacy/", "/troubleshooting/", "/docker-deployment/"
     ):
         if required not in layout:
             errors.append(f"Sidebar missing {required}")

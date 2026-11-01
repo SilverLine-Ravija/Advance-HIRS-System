@@ -266,6 +266,8 @@ The optional agent has its **own** API, distinct from the business `/api/v1` end
 
 - `POST /api/agent/chat` — submit a conversational request that can use permitted HR tools.
 - `POST /api/agent/confirm` — confirm a staged, single-use action as the authenticated actor.
+- `GET /api/agent/actions?limit=20` — list actor-scoped action history (limit 1–50).
+- `POST /api/agent/actions/{id}/dismiss` — atomically dismiss the caller's own pending, unexpired proposal.
 
 The private agent service validates the current principal through the HRIS API and uses the existing protected business endpoints for every operation. Agent actions are not direct SQL writes to HR data.
 

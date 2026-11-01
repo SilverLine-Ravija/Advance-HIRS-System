@@ -91,6 +91,8 @@ func main() {
 	mux.HandleFunc("GET /health", s.health)
 	mux.HandleFunc("POST /api/agent/chat", s.chat)
 	mux.HandleFunc("POST /api/agent/confirm", s.confirm)
+	mux.HandleFunc("GET /api/agent/actions", s.actionsHistory)
+	mux.HandleFunc("POST /api/agent/actions/{id}/dismiss", s.dismissAction)
 	app := &http.Server{Addr: ":" + cfg.port, Handler: s.secure(mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 35 * time.Second, WriteTimeout: 60 * time.Second, IdleTimeout: 45 * time.Second}
 	slog.Info("agent service listening", "port", cfg.port)
 	if err := app.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

@@ -92,3 +92,14 @@ The GitHub workflow itself is the authoritative Jekyll build test; its action co
 - Desktop cloud pulls preserve pending local edits; version conflicts are visible.
 
 Keep synthetic data in public screenshots and CI logs. Related: [security]({{ '/security-and-privacy/' | relative_url }}) · [Troubleshooting]({{ '/troubleshooting/' | relative_url }}).
+
+
+## End-to-end Docker test with a fake LLM
+
+```sh
+bash scripts/agent-docker-smoke.sh
+```
+
+This runs the normal local HRIS stack plus the private Go agent and `mock-model` container. It verifies the browser session proxy, role-scoped read tools, a **dismissed proposal that cannot execute**, a confirmed proposal, and per-user action history. The test uses disposable synthetic data and a deterministic local model fixture, **not an external AI API**. It tears down the test containers and volume when finished.
+
+GitHub Actions runs this in the `Full agentic Docker Compose integration` job. Separately test real AI provider compatibility in a safe environment before customer deployment.

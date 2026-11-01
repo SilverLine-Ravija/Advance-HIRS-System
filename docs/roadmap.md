@@ -19,7 +19,7 @@ This is a source-backed status overview, **not** a statement of product availabi
 | Attendance | Timekeeping, schedules, corrections, period summaries |
 | Desktop | Wails/React interface, encrypted local employee records and sync queue |
 | Platform | Tenant-aware Go API, PostgreSQL and audit records |
-| Agent | Authenticated tool calls, role allowlisting and single-use confirmed writes |
+| Agent | Authenticated tool calls, role allowlisting, single-use confirmed writes, action history and dismissal |
 | Documentation | GitHub Pages product site, operator guides and API examples |
 
 Implemented in code does **not** mean every edge case is audited or suitable for production workloads.

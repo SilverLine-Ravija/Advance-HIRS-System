@@ -297,3 +297,12 @@ The MVP startup path now includes repeatable SQL migrations and health-gated Doc
 ## OpenChoreo
 
 See `docs/openchoreo.md` for the component split and environment/secret guidance.
+
+
+## Agent action review and Docker deployment
+
+The agent assistant now supports scoped action history and safe dismissal of still-pending proposals. Browse `/assistant` to review recent proposals, recover after page reloads and inspect the recorded outcome. A dismissed action cannot subsequently be confirmed.
+
+The normal `docker compose up --build` remains **demo-only**. The optional development agent uses `docker-compose.agentic.yml`. For an external database and a TLS-terminating reverse proxy, use the separate [Docker deployment guide](docs/docker-deployment.md) and `docker-compose.production.yml` with `docker-compose.production.agentic.yml` for the private AI service. The production compose templates do not seed demo data or publish API/agent ports.
+
+A deterministic model-provider mock and `bash scripts/agent-docker-smoke.sh` exercise the full session-proxy, AI tool, proposal confirmation, dismissal and PostgreSQL flow without using a real AI key.
