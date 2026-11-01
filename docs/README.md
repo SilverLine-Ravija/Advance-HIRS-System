@@ -19,4 +19,4 @@ Implemented: employee management and secure invitations; leave policies, balance
 
 Not shipped: payroll and compensation processing, recruiting, performance management, document ingestion/RAG, notification providers, unattended agent jobs, and enterprise-ready SSO/session revocation.
 
-GitHub Pages only hosts the **public documentation**. It does not run the HRIS, connect to customer databases, or expose a production AI assistant.
+GitHub Pages only hosts the **public documentation**. The complete guides cover [employees](employee-guide.md), [managers](manager-guide.md), [HR administrators](hr-admin-guide.md), [leave](leave-management.md), [attendance](attendance-management.md), [agent usage](ai-assistant-guide.md), [desktop sync](desktop-guide.md), [access and tenancy](access-and-tenancy.md), [API examples](api-recipes.md), [configuration](configuration.md), [data model](data-model.md), [security](security-and-privacy.md), [testing](testing.md), [troubleshooting](troubleshooting.md), [FAQ](faq.md), and [contributing](contributing.md).  It does not run the HRIS, connect to customer databases, or expose a production AI assistant.

@@ -1,22 +1,55 @@
 ---
 title: Documentation
-description: Browse the Advance HRIS product, developer and operator handbook.
+description: The complete Advance HRIS handbook for employees, HR admins, developers and operators.
 section: docs
 permalink: /docs/
 ---
-<h1>Documentation</h1>
-<p class="lead">Everything you need to understand, run, integrate and operate Advance HRIS. These pages are built directly from the repository's documentation.</p>
-<label for="doc-search" style="font-weight:650;color:#ecf9ef">Find a guide</label>
-<input id="doc-search" class="guide-search" type="search" placeholder="Search topics: agent, API, Docker, security…" aria-label="Filter documentation guides" data-doc-search>
-<p aria-live="polite" data-search-status>Browse all guides</p>
-<div class="guide-grid">
-  <a class="guide-card" href="{{ '/quickstart/' | relative_url }}" data-doc-entry><strong>Quick start ↗</strong><span>Run Docker Compose and open the web and agent surfaces.</span></a>
-  <a class="guide-card" href="{{ '/architecture/' | relative_url }}" data-doc-entry><strong>System architecture ↗</strong><span>Components, tenants, data flow and trust boundaries.</span></a>
-  <a class="guide-card" href="{{ '/agentic-hris/' | relative_url }}" data-doc-entry><strong>Agentic implementation ↗</strong><span>Model integration, action confirmation, scoped tools and limitations.</span></a>
-  <a class="guide-card" href="{{ '/api-reference/' | relative_url }}" data-doc-entry><strong>API reference ↗</strong><span>Auth, employees, leave, attendance, sync and audit endpoints.</span></a>
-  <a class="guide-card" href="{{ '/development/' | relative_url }}" data-doc-entry><strong>Development ↗</strong><span>Local setup, environment configuration, testing and debugging.</span></a>
-  <a class="guide-card" href="{{ '/openchoreo/' | relative_url }}" data-doc-entry><strong>OpenChoreo deployment ↗</strong><span>Deploy the web, API and private agent components.</span></a>
-  <a class="guide-card" href="{{ '/production-readiness/' | relative_url }}" data-doc-entry><strong>Production readiness ↗</strong><span>Security, backups, observability and launch requirements.</span></a>
-  <a class="guide-card" href="{{ '/capabilities/' | relative_url }}" data-doc-entry><strong>Capability map ↗</strong><span>Implemented modules versus planned features.</span></a>
+<div class="docs-index-intro">
+  <span class="eyebrow">THE COMPLETE HANDBOOK</span>
+  <h1>Documentation</h1>
+  <p class="lead">From your first leave request to deploying the Go agent service. Browse guides for every role, along with the API, infrastructure, security and troubleshooting reference.</p>
+  <div class="docs-index-links"><a href="{{ '/quickstart/' | relative_url }}">Start in five steps →</a><a href="{{ '/capabilities/' | relative_url }}">Explore capabilities ↗</a></div>
 </div>
-<div class="docs-callout"><strong>New to the project?</strong> Begin with the quick start, then review architecture and the AI implementation guide. The public Pages site is documentation only; it does not host a live HRIS or real employee records.</div>
+<div class="guide-search-wrap">
+  <label for="doc-search">Find what you need</label>
+  <input id="doc-search" class="guide-search" type="search" placeholder="Try leave balance, JWT, offline sync, API, OpenChoreo…" aria-label="Filter documentation guides" data-doc-search autocomplete="off">
+  <span class="search-shortcut" aria-hidden="true">⌘ K</span>
+  <p aria-live="polite" class="search-status" data-search-status>Browse all 25 guides</p>
+</div>
+<section class="guide-section" data-guide-section><h2>Start here</h2><div class="guide-grid">
+<a class="guide-card" href="{{ '/quickstart/' | relative_url }}" data-doc-entry data-search-tags="docker quickstart install first setup"><strong>Quick start <span aria-hidden="true">↗</span></strong><span>Clone the repo, start the stack and enable the optional AI assistant.</span></a>
+<a class="guide-card" href="{{ '/faq/' | relative_url }}" data-doc-entry data-search-tags="questions answers help"><strong>Frequently asked questions <span aria-hidden="true">↗</span></strong><span>What is available, what is not, and how the system works.</span></a>
+<a class="guide-card" href="{{ '/roadmap/' | relative_url }}" data-doc-entry data-search-tags="status feature roadmap"><strong>Product status and roadmap <span aria-hidden="true">↗</span></strong><span>Shipped modules, unimplemented features and release criteria.</span></a>
+<a class="guide-card" href="{{ '/glossary/' | relative_url }}" data-doc-entry data-search-tags="definitions terminology reference"><strong>Glossary <span aria-hidden="true">↗</span></strong><span>Definitions for HRIS, tenants, leave ledgers and agent proposals.</span></a>
+</div></section>
+<section class="guide-section" data-guide-section><h2>For employees and managers</h2><div class="guide-grid">
+<a class="guide-card" href="{{ '/employee-guide/' | relative_url }}" data-doc-entry data-search-tags="leave employee self-service"><strong>Employee guide <span aria-hidden="true">↗</span></strong><span>Self-service leave, check-ins, corrections and assistant usage.</span></a>
+<a class="guide-card" href="{{ '/manager-guide/' | relative_url }}" data-doc-entry data-search-tags="manager direct report approve"><strong>Manager guide <span aria-hidden="true">↗</span></strong><span>Direct-report review, approval boundaries and team workflows.</span></a>
+<a class="guide-card" href="{{ '/leave-management/' | relative_url }}" data-doc-entry data-search-tags="vacation time off carry over"><strong>Leave management <span aria-hidden="true">↗</span></strong><span>Policies, holidays, ledger balance, half days and approval lifecycle.</span></a>
+<a class="guide-card" href="{{ '/attendance-management/' | relative_url }}" data-doc-entry data-search-tags="timekeeping shifts overtime clock"><strong>Attendance management <span aria-hidden="true">↗</span></strong><span>Work schedules, overtime metrics, corrections and time summaries.</span></a>
+<a class="guide-card" href="{{ '/ai-assistant-guide/' | relative_url }}" data-doc-entry data-search-tags="AI agent chatbot tool confirmation"><strong>AI assistant guide <span aria-hidden="true">↗</span></strong><span>Ask questions, review and confirm suggested HR actions safely.</span></a>
+</div></section>
+<section class="guide-section" data-guide-section><h2>For HR administrators</h2><div class="guide-grid">
+<a class="guide-card" href="{{ '/hr-admin-guide/' | relative_url }}" data-doc-entry data-search-tags="admin HR management access"><strong>HR administration <span aria-hidden="true">↗</span></strong><span>Employee records, invitations, policies, schedules and auditing.</span></a>
+<a class="guide-card" href="{{ '/desktop-guide/' | relative_url }}" data-doc-entry data-search-tags="Wails desktop SQLite offline"><strong>Desktop and offline sync <span aria-hidden="true">↗</span></strong><span>Encrypted Wails cache, durable queued edits and conflict handling.</span></a>
+<a class="guide-card" href="{{ '/access-and-tenancy/' | relative_url }}" data-doc-entry data-search-tags="authentication security RBAC JWT roles"><strong>Roles and tenancy <span aria-hidden="true">↗</span></strong><span>Who can access what, JWT sessions and organizational isolation.</span></a>
+<a class="guide-card" href="{{ '/security-and-privacy/' | relative_url }}" data-doc-entry data-search-tags="privacy compliance data protection"><strong>Security and privacy <span aria-hidden="true">↗</span></strong><span>Threat boundaries, model-provider data handling and production controls.</span></a>
+</div></section>
+<section class="guide-section" data-guide-section><h2>For developers</h2><div class="guide-grid">
+<a class="guide-card" href="{{ '/architecture/' | relative_url }}" data-doc-entry data-search-tags="component system architecture"><strong>System architecture <span aria-hidden="true">↗</span></strong><span>Next.js, Go API, agent, PostgreSQL and desktop trust boundaries.</span></a>
+<a class="guide-card" href="{{ '/api-reference/' | relative_url }}" data-doc-entry data-search-tags="REST API HTTP endpoints"><strong>API reference <span aria-hidden="true">↗</span></strong><span>Complete business endpoint catalog and request expectations.</span></a>
+<a class="guide-card" href="{{ '/api-recipes/' | relative_url }}" data-doc-entry data-search-tags="curl integration example JSON"><strong>API examples <span aria-hidden="true">↗</span></strong><span>Authenticated curl recipes and concrete request shapes.</span></a>
+<a class="guide-card" href="{{ '/data-model/' | relative_url }}" data-doc-entry data-search-tags="schema SQL database migrations"><strong>Data model <span aria-hidden="true">↗</span></strong><span>PostgreSQL schema groups, tenant keys, migrations and ledger invariants.</span></a>
+<a class="guide-card" href="{{ '/agentic-hris/' | relative_url }}" data-doc-entry data-search-tags="AI LLM tool orchestration Go"><strong>Agent implementation <span aria-hidden="true">↗</span></strong><span>Role-scoped tools, model orchestration and persisted action execution.</span></a>
+<a class="guide-card" href="{{ '/configuration/' | relative_url }}" data-doc-entry data-search-tags="environment variable config secrets"><strong>Configuration reference <span aria-hidden="true">↗</span></strong><span>Environment variables, secrets, model provider and Compose overlays.</span></a>
+</div></section>
+<section class="guide-section" data-guide-section><h2>Operate, deploy and contribute</h2><div class="guide-grid">
+<a class="guide-card" href="{{ '/development/' | relative_url }}" data-doc-entry data-search-tags="build local development"><strong>Development guide <span aria-hidden="true">↗</span></strong><span>Manual Go/Next.js setup, Docker startup and local troubleshooting.</span></a>
+<a class="guide-card" href="{{ '/openchoreo/' | relative_url }}" data-doc-entry data-search-tags="Kubernetes OpenChoreo deployment"><strong>OpenChoreo deployment <span aria-hidden="true">↗</span></strong><span>Service split, private agent networking and environment promotion.</span></a>
+<a class="guide-card" href="{{ '/testing/' | relative_url }}" data-doc-entry data-search-tags="tests QA CI"><strong>Testing and quality <span aria-hidden="true">↗</span></strong><span>Automated suites, CI, smoke tests and role acceptance.</span></a>
+<a class="guide-card" href="{{ '/production-readiness/' | relative_url }}" data-doc-entry data-search-tags="production checklist"><strong>Production readiness <span aria-hidden="true">↗</span></strong><span>Deploy gates, secrets, backups, sessions and operational controls.</span></a>
+<a class="guide-card" href="{{ '/troubleshooting/' | relative_url }}" data-doc-entry data-search-tags="errors fix debug"><strong>Troubleshooting <span aria-hidden="true">↗</span></strong><span>Resolve login, database, attendance, agent and Pages errors.</span></a>
+<a class="guide-card" href="{{ '/contributing/' | relative_url }}" data-doc-entry data-search-tags="pull request contribution"><strong>Contributing <span aria-hidden="true">↗</span></strong><span>Project layout, contribution process and public-repo licensing note.</span></a>
+</div></section>
+<p class="no-results" data-no-results hidden>No guides matched that search. Try a shorter term or <a href="{{ '/faq/' | relative_url }}">browse the FAQ</a>.</p>
+<div class="docs-callout"><strong>Public documentation, private application.</strong> GitHub Pages does not host the HRIS backend, a live AI assistant or employee data. This repository is a technical preview and requires operational hardening before production use.</div>

@@ -60,6 +60,10 @@ The repository documentation is organized as a handbook:
 - [API reference](docs/api-reference.md)
 - [Production readiness](docs/production-readiness.md)
 - [OpenChoreo deployment](docs/openchoreo.md)
+- [Complete employee and operator handbook](docs/README.md)
+- [API examples](docs/api-recipes.md)
+- [Roles and tenant isolation](docs/access-and-tenancy.md)
+- [Security and privacy](docs/security-and-privacy.md)
 - [AI assistant implementation](docs/agentic-hris.md)
 
 The same operator/developer guide is available in the web application at `/docs`.
