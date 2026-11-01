@@ -15,6 +15,11 @@ cleanup() {
   if [ "$code" -ne 0 ]; then
     "${COMPOSE[@]}" ps || true
     "${COMPOSE[@]}" logs --tail=90 api web agent mock-model migrate || true
+    WEB_ID=$("${COMPOSE[@]}" ps -q web || true)
+    if [ -n "$WEB_ID" ]; then
+      docker inspect "$WEB_ID" --format '{{json .State.Health.Log}}' || true
+      "${COMPOSE[@]}" exec -T web node -e "fetch('http://127.0.0.1:3000/docs').then(async r => {console.log('Web health URL:', r.status, (await r.text()).slice(0,400));}).catch(e => console.error('Web probe failure:', e.message))" || true
+    fi
   fi
   "${COMPOSE[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
   rm -f "$COOKIE_JAR" "$TMP_BODY"

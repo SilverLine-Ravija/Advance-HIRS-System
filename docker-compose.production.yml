@@ -63,7 +63,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/docs >/dev/null 2>&1"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/docs').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
       timeout: 4s
       retries: 12
