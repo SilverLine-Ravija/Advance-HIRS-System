@@ -1,34 +1,24 @@
 # Advance HRIS
 
-A hybrid local-first Human Resources Information System designed for real internal company operations and as a multi-component OpenChoreo demo.
+A web-based Human Resources Information System designed for real internal company operations and as a multi-component OpenChoreo demo.
 
 ## Product architecture
 
 ```text
-Employees / Managers                 HR / Admins
-        |                                  |
-        v                                  v
-Next.js Web Portal                Wails + React Desktop
-        |                                  |
-        |                         Encrypted local SQLite
-        |                                  |
-        |                          durable sync queue
-        +---------------+------------------+
-                        |
-                        v
-                 Go Application API
-            Auth + RBAC + tenant scope
-                        |
-                        v
-                    PostgreSQL
+Employees, managers, HR and admins
+                |
+         Next.js web portal
+                |
+            Go HR API
+                |
+           PostgreSQL
 ```
 
-PostgreSQL is the authoritative cloud system of record. Employee/manager self-service runs through the web portal, while HR/admins can also use the native local-first desktop console.
+PostgreSQL is the system of record for all HR workflows.
 
 ## Current product foundation
 
 - Responsive role-aware Next.js portal
-- Native Wails + React HR/admin desktop console
 - PostgreSQL persistence with organization/tenant isolation
 - bcrypt password authentication + signed JWT access tokens
 - Web sessions stored in HttpOnly/SameSite cookies through a Next.js BFF
@@ -45,9 +35,6 @@ PostgreSQL is the authoritative cloud system of record. Employee/manager self-se
 - Secure one-time organization invitations
 - HR/admin access administration at `/access`
 - Invitation acceptance/onboarding at `/accept?token=...`
-- AES-256-GCM encrypted desktop employee payloads
-- OS-keychain-protected desktop session token
-- Durable offline desktop sync queue with conflict detection
 - CI integration tests against PostgreSQL for RBAC, invitations, leave accounting, attendance accounting, audit and tenant isolation
 
 ## Documentation
@@ -168,17 +155,6 @@ Security boundaries:
 - Reissuing an invitation invalidates the prior pending token for that email.
 - Existing users can join another organization without having their password overwritten.
 
-## Run the desktop app
-
-Start PostgreSQL/API first, then:
-
-```bash
-cd apps/desktop
-wails dev
-```
-
-The desktop application accepts HR/admin accounts only. Its cloud access token is stored in the operating-system keychain and is never written to SQLite or browser local storage.
-
 ## API auth and workflow endpoints
 
 Login:
@@ -229,8 +205,6 @@ Core protected endpoints include:
 - `GET /api/v1/audit`
 - `GET|POST /api/v1/access/invitations`
 - `POST /api/v1/access/invitations/{id}/revoke`
-- `POST /api/v1/sync/push`
-- `GET /api/v1/sync/pull`
 
 Public token-bound onboarding endpoints:
 
@@ -291,8 +265,7 @@ The MVP startup path now includes repeatable SQL migrations and health-gated Doc
 5. Performance goals/reviews
 6. Recruiting pipeline
 7. Employee documents and notifications
-8. Desktop conflict-resolution UI + delta sync
-9. Permission-aware AI HR copilot
+8. Permission-aware AI HR copilot
 
 ## OpenChoreo
 

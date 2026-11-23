@@ -16,7 +16,7 @@ EXPECTED = {
     "/docs/", "/quickstart/", "/capabilities/", "/workflows/",
     "/employee-guide/", "/manager-guide/", "/hr-admin-guide/",
     "/leave-management/", "/attendance-management/", "/ai-assistant-guide/",
-    "/desktop-guide/", "/access-and-tenancy/", "/architecture/",
+    "/access-and-tenancy/", "/architecture/",
     "/api-reference/", "/api-recipes/", "/data-model/", "/agentic-hris/",
     "/configuration/", "/development/", "/openchoreo/", "/testing/",
     "/security-and-privacy/", "/production-readiness/", "/troubleshooting/",

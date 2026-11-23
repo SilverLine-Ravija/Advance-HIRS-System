@@ -1,6 +1,6 @@
 ---
 title: Glossary
-description: Definitions for HRIS, tenancy, leave accounting, agent proposals and desktop sync.
+description: Definitions for HRIS, tenancy, leave accounting, agent proposals.
 section: docs
 permalink: /glossary/
 ---
@@ -28,8 +28,6 @@ permalink: /glossary/
 | Human confirmation | Explicit action by the authenticated user to execute a staged mutation |
 | Idempotency / single-use | Protection against running the same confirmed agent proposal twice |
 | Outcome uncertain | Network failure after a request might already have reached the HRIS; requires reconciliation |
-| Local-first | Desktop writes an encrypted local record and queues cloud synchronization |
-| Sync conflict | A remote version changed after the local base version; requires explicit reconciliation |
 | OpenChoreo | Intended platform for deploying and operating components, separate from the HRIS business logic |
 | GitHub Pages | Static public documentation hosting; not the authenticated HRIS runtime |
 

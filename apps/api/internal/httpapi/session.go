@@ -9,7 +9,7 @@ import (
 
 // logout runs after authorize has verified the token signature, current
 // membership and revocation state. A successful response means the token can
-// no longer be used by the browser, desktop or AI agent.
+// no longer be used by the browser or AI agent.
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
     header := strings.TrimSpace(r.Header.Get("Authorization"))
     if len(header) < len("Bearer ") || !strings.EqualFold(header[:len("Bearer")], "Bearer") {

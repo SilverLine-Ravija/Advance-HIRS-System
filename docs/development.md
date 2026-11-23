@@ -1,6 +1,6 @@
 ---
 title: Development and local operation
-description: Run, test and debug the HRIS stack, native desktop and agent service.
+description: Run, test and debug the HRIS stack, web portal and agent service.
 section: docs
 permalink: /development/
 ---
@@ -18,7 +18,6 @@ For manual development:
 
 - Go 1.26 for `apps/api`;
 - Node.js 22 for `apps/web`;
-- Go 1.25 + Wails tooling for `apps/desktop`;
 - PostgreSQL 17;
 - npm.
 
@@ -145,17 +144,6 @@ Open `http://localhost:3000/assistant` after signing in. The agent service is pr
 
 For model configuration, human confirmation, action storage, and security boundaries see [Agentic HRIS implementation]({{ '/agentic-hris/' | relative_url }}).
 
-## Desktop development
-
-Start PostgreSQL/API first.
-
-```bash
-cd apps/desktop
-wails dev
-```
-
-The desktop application accepts only admin/HR sessions.
-
 ## Database migrations
 
 Apply all current migrations with:
@@ -186,23 +174,6 @@ npm install
 npm run build
 ```
 
-### Desktop UI
-
-```bash
-cd apps/desktop/frontend
-npm install
-npm run build
-```
-
-### Desktop Go core
-
-```bash
-cd apps/desktop
-go test ./internal/...
-```
-
-CI runs these surfaces separately.
-
 ## Common problems
 
 ### Login succeeds but subsequent web calls say unauthorized
@@ -226,7 +197,3 @@ The migration service runs before the API. If you intentionally want a fresh dem
 ### Port already in use
 
 Override host ports with `HRIS_WEB_PORT`, `HRIS_API_PORT` and `HRIS_POSTGRES_PORT`.
-
-### Desktop says the native bridge is unavailable
-
-The React frontend must be opened through Wails, not as a standalone browser page.

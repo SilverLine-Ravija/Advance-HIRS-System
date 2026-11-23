@@ -209,38 +209,6 @@ jobs:
           curl -sf 'http://localhost:8080/api/v1/audit?limit=50' "${ADMIN_AUTH[@]}" \
             | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data["total"] >= 10'
 
-  desktop-ui:
-    name: Desktop UI build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/desktop/frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: apps/desktop/frontend/package.json
-      - run: npm install
-      - run: npm run build
-
-  desktop-core:
-    name: Desktop Go core
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/desktop
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.x'
-          cache-dependency-path: apps/desktop/go.mod
-      - run: go mod tidy
-      - run: go test ./internal/...
-
-
   mvp-compose:
     name: One-command MVP smoke test
     runs-on: ubuntu-latest

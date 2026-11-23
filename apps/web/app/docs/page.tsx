@@ -45,15 +45,13 @@ const endpointGroups = [
       "POST /api/v1/attendance/corrections/{id}/decision",
       "GET /api/v1/attendance/timesheet",
       "GET /api/v1/audit",
-      "POST /api/v1/sync/push",
-      "GET /api/v1/sync/pull",
     ],
   },
 ];
 
 const roles = [
   ["Admin", "Organization-wide HR operations, access administration, employee management, audit, leave and attendance administration."],
-  ["HR", "Employee management, employee/manager invitations, leave and attendance administration, audit and desktop sync."],
+  ["HR", "Employee management, employee/manager invitations, leave and attendance administration, audit."],
   ["Manager", "Self service plus direct-report leave and attendance review."],
   ["Employee", "Self-service leave and attendance."],
 ];
@@ -80,7 +78,7 @@ export default function DocsPage() {
           <div>
             <p className={styles.kicker}>PRODUCT + DEVELOPER DOCUMENTATION</p>
             <h1>Build, run and operate Advance HRIS with one source of truth.</h1>
-            <p className={styles.lead}>Advance HRIS combines a Next.js portal, Go API, PostgreSQL, Wails local-first desktop console and an optional permission-aware AI assistant. This page is a concise in-app reference. The complete maintained handbook covers every user role and technical subsystem.</p>
+            <p className={styles.lead}>Advance HRIS combines a Next.js portal, Go API, PostgreSQL and an optional permission-aware AI assistant. This page is a concise in-app reference. The complete maintained handbook covers every user role and technical subsystem.</p>
             <div className={styles.actions}><a className={styles.primary} href="https://silverline-ravija.github.io/Advance-HIRS-System/docs/" target="_blank" rel="noopener noreferrer">Complete handbook ↗</a><a className={styles.secondary} href="https://github.com/SilverLine-Ravija/Advance-HIRS-System">View repository</a></div>
           </div>
           <aside className={styles.commandCard}>
@@ -121,7 +119,7 @@ export default function DocsPage() {
       </section>
 
       <section className={styles.section} id="architecture">
-        <div className={styles.sectionHeading}><p>02 · ARCHITECTURE</p><h2>Hybrid web + local-first HR operations</h2></div>
+        <div className={styles.sectionHeading}><p>02 · ARCHITECTURE</p><h2>Web portal and HR API</h2></div>
         <div className={styles.arch}>
           <div className={styles.node}><span>Employees / Managers</span><strong>Next.js web portal</strong><small>HttpOnly session · self service</small></div>
           <div className={styles.arrow}>→</div>
@@ -129,7 +127,6 @@ export default function DocsPage() {
           <div className={styles.arrow}>→</div>
           <div className={styles.node}><span>Authoritative state</span><strong>PostgreSQL</strong><small>Organizations · people · leave · attendance · audit</small></div>
         </div>
-        <div className={styles.archSecondary}><div className={styles.node}><span>HR / Admin</span><strong>Wails desktop</strong><small>Encrypted SQLite · OS keychain · durable sync queue</small></div><div className={styles.arrow}>↗</div><p>The desktop uses the same API and tenant rules. Local storage is an encrypted working copy, not an authorization boundary.</p></div>
         <div className={styles.principles}>
           <article><h3>Tenant invariant</h3><p>Organization ID comes from the authenticated principal. Employee identity is scoped by <code>(organization_id, employee_id)</code>.</p></article>
           <article><h3>Web session boundary</h3><p>The browser does not need the bearer token. Next.js stores it in an HttpOnly cookie and proxies same-origin API calls.</p></article>
@@ -148,7 +145,6 @@ export default function DocsPage() {
           <article className={styles.card}><h3>People & access</h3><p>Employee create/update/archive, role-aware directory access, one-time invitations and organization memberships.</p><code>/access</code></article>
           <article className={styles.card}><h3>Leave Management v2</h3><p>Policies, balances, carry-over, holidays, half days, overlap prevention, manager approvals and auditable adjustments.</p><code>/leave · /leave/admin</code></article>
           <article className={styles.card}><h3>Attendance Management v2</h3><p>Schedules, effective-dated assignments, check-in/out, corrections, late/early/overtime metrics and payroll-ready summaries.</p><code>/attendance · /attendance/admin</code></article>
-          <article className={styles.card}><h3>Desktop operations</h3><p>Encrypted local employee state, queued edits, cloud synchronization, leave approvals, attendance override and audit visibility.</p><code>apps/desktop</code></article>
         </div>
       </section>
 
@@ -178,7 +174,7 @@ export default function DocsPage() {
         <div className={styles.checklist}>{productionChecklist.map((item) => <div key={item}><span>✓</span><p>{item}</p></div>)}</div>
         <div className={styles.boundary}>
           <h3>Deliberately not presented as complete</h3>
-          <p>Payroll/compensation, performance management, recruitment, employee document storage/notifications, enterprise SSO/OIDC, refresh-token revocation, full desktop conflict-resolution UX, unattended agent workflows and advanced AI document retrieval remain future layers. A permission-aware AI assistant now exists, but still needs production security and operational hardening. Placeholder navigation should not be treated as shipped functionality.</p>
+          <p>Payroll/compensation, performance management, recruitment, employee document storage/notifications, enterprise SSO/OIDC, refresh-token revocation, unattended agent workflows and advanced AI document retrieval remain future layers. A permission-aware AI assistant now exists, but still needs production security and operational hardening. Placeholder navigation should not be treated as shipped functionality.</p>
         </div>
       </section>
 

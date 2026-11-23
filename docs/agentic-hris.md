@@ -22,7 +22,7 @@ This increment adds an authenticated AI assistant without replacing existing bus
 - Next.js `/assistant` interface and same-origin server-side BFF API proxy.
 - Separate agent container deployable as another OpenChoreo application component.
 
-Not shipped: payroll computations, candidate recruiting pipeline, employee document ingestion, RAG over company handbooks, Slack/Teams/WhatsApp notifications, unattended scheduled jobs, automated hiring/performance decisions, or native offline Wails agent UI. Those require new business modules and explicit product requirements. AI is not silently presented as those modules.
+Not shipped: payroll computations, candidate recruiting pipeline, employee document ingestion, RAG over company handbooks, Slack/Teams/WhatsApp notifications, unattended scheduled jobs, automated hiring/performance decisions. Those require new business modules and explicit product requirements. AI is not silently presented as those modules.
 
 ## Running in local development
 
@@ -38,7 +38,7 @@ docker compose -f docker-compose.yml -f docker-compose.agentic.yml up --build
 4. Sign in at `http://localhost:3000` using demo-only accounts, then open `http://localhost:3000/assistant`.
 5. Test read-only questions first, then test a leave request in a disposable organization. Confirm that an unconfirmed action does not write to the HRIS database.
 
-On OpenChoreo, deploy `apps/agent` as **a private service on port 8090**, wire `AGENT_INTERNAL_URL` in the web component, `HRIS_API_URL` in agent, and inject `OPENAI_API_KEY`, `AGENT_DATABASE_URL`, `OPENAI_MODEL` from environment secrets. Do not publish the agent service directly to the internet. Connect to a managed PostgreSQL instance whose migrations have run. The desktop application remains a normal HRIS API client.
+On OpenChoreo, deploy `apps/agent` as **a private service on port 8090**, wire `AGENT_INTERNAL_URL` in the web component, `HRIS_API_URL` in agent, and inject `OPENAI_API_KEY`, `AGENT_DATABASE_URL`, `OPENAI_MODEL` from environment secrets. Do not publish the agent service directly to the internet. Connect to a managed PostgreSQL instance whose migrations have run.
 
 ## Security model
 

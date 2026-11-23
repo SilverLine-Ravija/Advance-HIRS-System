@@ -14,8 +14,7 @@ Advance-HIRS-System/
 ├── apps/
 │   ├── api/                 Go HRIS business API
 │   ├── agent/               Optional AI tool orchestration
-│   ├── web/                 Next.js employee/manager/HR portal
-│   └── desktop/             Wails + React native HR console
+│   └── web/                 Next.js employee/manager/HR portal
 ├── db/
 │   ├── schema.sql
 │   ├── migrate.sh
@@ -51,7 +50,7 @@ Provide:
 - the affected app/module and browser/OS where relevant;
 - step-by-step reproduction with synthetic data;
 - logs after removing tokens, names, emails and personal information;
-- whether the problem occurs only offline, only with the AI overlay, or in core HRIS.
+- whether the problem occurs with the AI overlay or in core HRIS.
 
 ## License note
 

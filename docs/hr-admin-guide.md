@@ -7,7 +7,7 @@ permalink: /hr-admin-guide/
 
 # HR administrator guide
 
-HR and admin users manage organizational HR workflows through the web portal and the optional native desktop console. The Go API remains authoritative for permissions and data changes.
+HR and admin users manage organizational HR workflows through the web portal. The Go API remains authoritative for permissions and data changes.
 
 ## Administration areas
 
@@ -19,7 +19,6 @@ HR and admin users manage organizational HR workflows through the web portal and
 | Attendance | `/attendance/admin` | Configure schedules and employee assignments, review corrections, generate period summaries |
 | Audit | `GET /api/v1/audit` | Review scoped HR workflow activity |
 | Assistant | `/assistant` | Retrieve authorized insights and prepare approved actions |
-| Desktop | Wails HR console | Make local-first employee updates and sync them securely |
 
 ## Employee lifecycle
 
@@ -57,12 +56,6 @@ When an employee checks in, the effective schedule is snapshotted on that row. L
 Approve legitimate attendance correction requests with sufficient evidence. Use `GET /api/v1/attendance/timesheet` to obtain payroll-ready time summaries; **this is not a complete payroll module**.
 
 See [attendance management]({{ '/attendance-management/' | relative_url }}).
-
-## Desktop synchronization
-
-The desktop console is limited to HR/admin. It stores encrypted employee payloads locally, queues offline changes and pushes through authenticated tenant-scoped API endpoints when connected. A conflict is reported rather than silently overwriting the remote record. A full conflict-resolution interface has not shipped.
-
-See [desktop and offline sync]({{ '/desktop-guide/' | relative_url }}).
 
 ## Production responsibilities
 
