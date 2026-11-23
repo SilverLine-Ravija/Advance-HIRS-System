@@ -11,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/savisaluwadana/Advance-HIRS-System/apps/api/internal/auth"
 	"github.com/savisaluwadana/Advance-HIRS-System/apps/api/internal/model"
 )
@@ -21,7 +22,21 @@ var (
 )
 
 type Store struct {
-	pool *pgxpool.Pool
+	pool database
+	owner *pgxpool.Pool
+}
+
+type database interface {
+	Begin(context.Context) (pgx.Tx, error)
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+	Query(context.Context, string, ...any) (pgx.Rows, error)
+	QueryRow(context.Context, string, ...any) pgx.Row
+}
+
+func (s *Store) InTransaction(ctx context.Context, run func(*Store) error) error {
+	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		return run(&Store{pool: tx})
+	})
 }
 
 func Open(ctx context.Context, dsn string) (*Store, error) {
@@ -36,10 +51,10 @@ func Open(ctx context.Context, dsn string) (*Store, error) {
 		pool.Close()
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
-	return &Store{pool: pool}, nil
+	return &Store{pool: pool, owner: pool}, nil
 }
 
-func (s *Store) Close() { s.pool.Close() }
+func (s *Store) Close() { s.owner.Close() }
 
 func (s *Store) Bootstrap(ctx context.Context, orgName, orgSlug, adminName, adminEmail, adminPassword string, seedDemo bool) (string, error) {
 	if orgName == "" || orgSlug == "" {
@@ -292,14 +307,15 @@ func (s *Store) LeaveRequests(ctx context.Context, orgID string) ([]model.LeaveR
 	return requests, rows.Err()
 }
 
-func (s *Store) RecordAudit(ctx context.Context, orgID, userID, action, resourceType, resourceID string, metadata string) {
+func (s *Store) RecordAudit(ctx context.Context, orgID, userID, action, resourceType, resourceID string, metadata string) error {
 	if metadata == "" {
 		metadata = `{}`
 	}
-	_, _ = s.pool.Exec(ctx, `
+	_, err := s.pool.Exec(ctx, `
 		INSERT INTO audit_events (organization_id, actor_user_id, action, resource_type, resource_id, metadata)
 		VALUES ($1::uuid, NULLIF($2, '')::uuid, $3, $4, $5, $6::jsonb)`,
 		orgID, userID, action, resourceType, resourceID, metadata)
+	return err
 }
 
 const employeeSelect = `
@@ -334,5 +350,5 @@ func newEmployeeID() (string, error) {
 func (s *Store) Ready(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
-	return s.pool.Ping(ctx)
+	return s.owner.Ping(ctx)
 }

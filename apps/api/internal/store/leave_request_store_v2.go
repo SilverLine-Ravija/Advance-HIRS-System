@@ -13,42 +13,7 @@ import (
 )
 
 func (s *Store) CalculateLeaveDays(ctx context.Context, orgID, employeeID string, start, end time.Time, partialDay string) (float64, map[int]float64, error) {
-	if partialDay != "full" && !sameDate(start, end) {
-		return 0, nil, fmt.Errorf("partial-day leave must start and end on the same date")
-	}
-	var location string
-	if err := s.pool.QueryRow(ctx, `
-		SELECT COALESCE(location, '') FROM employees
-		WHERE organization_id=$1::uuid AND id=$2`, orgID, employeeID).Scan(&location); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, nil, ErrNotFound
-		}
-		return 0, nil, err
-	}
-	rows, err := s.pool.Query(ctx, `
-		SELECT holiday_date
-		FROM company_holidays
-		WHERE organization_id=$1::uuid
-		  AND holiday_date BETWEEN $2::date AND $3::date
-		  AND (location IS NULL OR location='' OR lower(location)=lower($4))`,
-		orgID, start.Format("2006-01-02"), end.Format("2006-01-02"), location)
-	if err != nil {
-		return 0, nil, err
-	}
-	holidays := map[string]struct{}{}
-	for rows.Next() {
-		var holiday time.Time
-		if err := rows.Scan(&holiday); err != nil {
-			rows.Close()
-			return 0, nil, err
-		}
-		holidays[holiday.Format("2006-01-02")] = struct{}{}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
-		return 0, nil, err
-	}
-	return calculateWorkingDays(start, end, partialDay, holidays)
+	return scheduledLeaveDays(ctx, s.pool, orgID, employeeID, start, end, partialDay)
 }
 
 func (s *Store) CreateLeaveRequestV2(ctx context.Context, orgID, employeeID, leaveType string, start, end time.Time, partialDay, reason string) (model.LeaveWorkflowRequest, error) {
@@ -117,15 +82,17 @@ func (s *Store) DecideLeaveRequestV2(ctx context.Context, orgID, requestID, appr
 		return model.LeaveWorkflowRequest{}, ErrConflict
 	}
 
+	var approvedDays *float64
 	if decision == "approved" {
 		policy, err := s.policyForDecision(ctx, tx, orgID, employeeID, leaveType, policyID, start)
 		if err != nil {
 			return model.LeaveWorkflowRequest{}, err
 		}
-		_, byYear, err := s.calculateLeaveDaysTx(ctx, tx, orgID, employeeID, start, end, partialDay)
+		days, byYear, err := scheduledLeaveDays(ctx, tx, orgID, employeeID, start, end, partialDay)
 		if err != nil {
 			return model.LeaveWorkflowRequest{}, err
 		}
+		approvedDays = &days
 		if policy.TrackBalance {
 			for year, days := range byYear {
 				if err := ensureLeaveYearTx(ctx, tx, orgID, employeeID, policy, year, actorUserID); err != nil {
@@ -155,7 +122,7 @@ func (s *Store) DecideLeaveRequestV2(ctx context.Context, orgID, requestID, appr
 	request, err := scanWorkflowLeaveRequest(tx.QueryRow(ctx, `
 		WITH decided AS (
 			UPDATE leave_requests
-			SET status=$3, approver_id=NULLIF($4, ''), decided_at=now(),
+			SET status=$3, days=COALESCE($6, days), approver_id=NULLIF($4, ''), decided_at=now(),
 			    decision_note=NULLIF($5, ''), updated_at=now()
 			WHERE organization_id=$1::uuid AND id=$2::uuid
 			RETURNING *
@@ -168,7 +135,7 @@ func (s *Store) DecideLeaveRequestV2(ctx context.Context, orgID, requestID, appr
 		FROM decided l
 		JOIN employees e ON e.id=l.employee_id AND e.organization_id=l.organization_id
 		LEFT JOIN employees a ON a.id=l.approver_id AND a.organization_id=l.organization_id`,
-		orgID, requestID, decision, approverEmployeeID, strings.TrimSpace(note)))
+		orgID, requestID, decision, approverEmployeeID, strings.TrimSpace(note), approvedDays))
 	if err != nil {
 		return model.LeaveWorkflowRequest{}, err
 	}
@@ -268,70 +235,61 @@ func (s *Store) policyForDecision(ctx context.Context, tx pgx.Tx, orgID, employe
 		LIMIT 1`, orgID, employeeID, leaveType, onDate.Format("2006-01-02")))
 }
 
-func (s *Store) calculateLeaveDaysTx(ctx context.Context, tx pgx.Tx, orgID, employeeID string, start, end time.Time, partialDay string) (float64, map[int]float64, error) {
-	if partialDay != "full" && !sameDate(start, end) {
+// Resolve the schedule effective on each local calendar date. Organizations
+// without a configured default retain the standard Monday-Friday workweek.
+func scheduledLeaveDays(ctx context.Context, db database, orgID, employeeID string, start, end time.Time, partialDay string) (float64, map[int]float64, error) {
+	if partialDay != "full" && start.Format("2006-01-02") != end.Format("2006-01-02") {
 		return 0, nil, fmt.Errorf("partial-day leave must start and end on the same date")
 	}
 	var location string
-	if err := tx.QueryRow(ctx, `SELECT COALESCE(location,'') FROM employees WHERE organization_id=$1::uuid AND id=$2`, orgID, employeeID).Scan(&location); err != nil {
-		return 0, nil, err
+	err := db.QueryRow(ctx, `SELECT COALESCE(location,'') FROM employees WHERE organization_id=$1 AND id=$2`, orgID, employeeID).Scan(&location)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, nil, ErrNotFound
 	}
-	rows, err := tx.Query(ctx, `
-		SELECT holiday_date FROM company_holidays
-		WHERE organization_id=$1::uuid AND holiday_date BETWEEN $2::date AND $3::date
-		  AND (location IS NULL OR location='' OR lower(location)=lower($4))`,
-		orgID, start.Format("2006-01-02"), end.Format("2006-01-02"), location)
 	if err != nil {
 		return 0, nil, err
 	}
-	holidays := map[string]struct{}{}
-	for rows.Next() {
-		var holiday time.Time
-		if err := rows.Scan(&holiday); err != nil {
-			rows.Close()
-			return 0, nil, err
-		}
-		holidays[holiday.Format("2006-01-02")] = struct{}{}
-	}
-	rows.Close()
-	if err := rows.Err(); err != nil {
+	rows, err := db.Query(ctx, `
+		WITH dates AS (
+			SELECT $3::date + n AS day FROM generate_series(0, $4::date - $3::date) AS n
+		)
+		SELECT extract(year FROM day)::int, count(*) FROM dates
+		LEFT JOIN LATERAL (
+			SELECT s.work_days FROM work_schedules s
+			LEFT JOIN work_schedule_assignments a ON a.organization_id=s.organization_id
+				AND a.schedule_id=s.id AND a.employee_id=$2
+				AND a.effective_from <= day AND (a.effective_to IS NULL OR a.effective_to >= day)
+			WHERE s.organization_id=$1 AND s.active AND (a.id IS NOT NULL OR s.is_default)
+			ORDER BY (a.id IS NOT NULL) DESC, a.effective_from DESC NULLS LAST, s.id
+			LIMIT 1
+		) schedule ON true
+		WHERE extract(dow FROM day)::smallint = ANY(COALESCE(schedule.work_days, ARRAY[1,2,3,4,5]::smallint[]))
+		AND NOT EXISTS (
+			SELECT 1 FROM company_holidays h WHERE h.organization_id=$1 AND h.holiday_date=day
+				AND (COALESCE(h.location,'')='' OR lower(h.location)=lower($5))
+		)
+		GROUP BY 1`, orgID, employeeID, start.Format("2006-01-02"), end.Format("2006-01-02"), location)
+	if err != nil {
 		return 0, nil, err
 	}
-	return calculateWorkingDays(start, end, partialDay, holidays)
-}
-
-func calculateWorkingDays(start, end time.Time, partialDay string, holidays map[string]struct{}) (float64, map[int]float64, error) {
+	defer rows.Close()
 	byYear := map[int]float64{}
-	for day := dateOnly(start); !day.After(dateOnly(end)); day = day.AddDate(0, 0, 1) {
-		if day.Weekday() == time.Saturday || day.Weekday() == time.Sunday {
-			continue
-		}
-		if _, holiday := holidays[day.Format("2006-01-02")]; holiday {
-			continue
-		}
-		amount := 1.0
-		if partialDay != "full" {
-			amount = 0.5
-		}
-		byYear[day.Year()] += amount
-	}
 	var total float64
-	for _, amount := range byYear {
-		total += amount
+	for rows.Next() {
+		var year, count int
+		if err := rows.Scan(&year, &count); err != nil {
+			return 0, nil, err
+		}
+		days := float64(count)
+		if partialDay != "full" { days /= 2 }
+		byYear[year] = days
+		total += days
+	}
+	if err := rows.Err(); err != nil {
+		return 0, nil, err
 	}
 	if total == 0 {
 		return 0, nil, ErrNoWorkingDays
 	}
 	return total, byYear, nil
-}
-
-func sameDate(a, b time.Time) bool {
-	y1, m1, d1 := a.Date()
-	y2, m2, d2 := b.Date()
-	return y1 == y2 && m1 == m2 && d1 == d2
-}
-
-func dateOnly(value time.Time) time.Time {
-	y, m, d := value.Date()
-	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 }

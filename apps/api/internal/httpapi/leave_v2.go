@@ -48,8 +48,11 @@ func (s *Server) upsertLeavePolicyV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "leave_policy_save_error", "could not save leave policy")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.policy_saved", "leave_policy", policy.ID,
-		workflowAuditMetadata(map[string]any{"leave_type": policy.LeaveType, "code": policy.Code}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.policy_saved", "leave_policy", policy.ID,
+		workflowAuditMetadata(map[string]any{"leave_type": policy.LeaveType, "code": policy.Code})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, policy)
 }
 
@@ -73,8 +76,11 @@ func (s *Server) assignLeavePolicyV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "leave_assignment_error", err.Error())
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.policy_assigned", "leave_policy", r.PathValue("id"),
-		workflowAuditMetadata(map[string]any{"employee_id": input.EmployeeID}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.policy_assigned", "leave_policy", r.PathValue("id"),
+		workflowAuditMetadata(map[string]any{"employee_id": input.EmployeeID})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, map[string]any{"assigned": true})
 }
 
@@ -141,8 +147,11 @@ func (s *Server) adjustLeaveBalanceV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "leave_adjustment_error", "could not adjust leave balance")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.balance_adjusted", "leave_balance", event.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": input.EmployeeID, "policy_id": input.PolicyID, "amount": input.Amount}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.balance_adjusted", "leave_balance", event.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": input.EmployeeID, "policy_id": input.PolicyID, "amount": input.Amount})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, event)
 }
 
@@ -180,8 +189,11 @@ func (s *Server) createHolidayV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "holiday_create_error", "could not create company holiday")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.holiday_created", "company_holiday", holiday.ID,
-		workflowAuditMetadata(map[string]any{"date": holiday.Date, "location": holiday.Location}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.holiday_created", "company_holiday", holiday.ID,
+		workflowAuditMetadata(map[string]any{"date": holiday.Date, "location": holiday.Location})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, holiday)
 }
 
@@ -195,11 +207,22 @@ func (s *Server) deleteHolidayV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "holiday_delete_error", "could not delete company holiday")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.holiday_deleted", "company_holiday", r.PathValue("id"), `{}`)
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.holiday_deleted", "company_holiday", r.PathValue("id"), `{}`); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) createLeaveRequestV2(w http.ResponseWriter, r *http.Request) {
+	s.processLeaveRequest(w, r, false)
+}
+
+func (s *Server) previewLeaveDays(w http.ResponseWriter, r *http.Request) {
+	s.processLeaveRequest(w, r, true)
+}
+
+func (s *Server) processLeaveRequest(w http.ResponseWriter, r *http.Request, preview bool) {
 	principal := principalFromContext(r.Context())
 	var input model.CreateLeaveRequestV2
 	if err := decodeJSON(r, &input); err != nil {
@@ -232,13 +255,31 @@ func (s *Server) createLeaveRequestV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "validation_error", "end_date must use YYYY-MM-DD and be on or after start_date")
 		return
 	}
+	if input.PartialDay != "full" && !start.Equal(end) {
+		writeError(w, http.StatusBadRequest, "validation_error", "half-day leave must start and end on the same date")
+		return
+	}
+	if preview {
+		days, _, err := s.store.CalculateLeaveDays(r.Context(), principal.OrganizationID, employeeID, start, end, input.PartialDay)
+		switch {
+		case errors.Is(err, store.ErrNotFound):
+			writeError(w, http.StatusNotFound, "employee_not_found", "employee does not exist in this organization")
+		case errors.Is(err, store.ErrNoWorkingDays):
+			writeJSON(w, http.StatusOK, map[string]float64{"days": 0})
+		case err != nil:
+			writeError(w, http.StatusInternalServerError, "leave_preview_error", "could not calculate leave days")
+		default:
+			writeJSON(w, http.StatusOK, map[string]float64{"days": days})
+		}
+		return
+	}
 	request, err := s.store.CreateLeaveRequestV2(r.Context(), principal.OrganizationID, employeeID, input.Type, start, end, input.PartialDay, strings.TrimSpace(input.Reason))
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrConflict):
 			writeError(w, http.StatusConflict, "leave_overlap", "this employee already has pending or approved leave in that date range")
 		case errors.Is(err, store.ErrNoWorkingDays):
-			writeError(w, http.StatusUnprocessableEntity, "no_working_days", "the selected dates contain no working days after weekends and company holidays")
+			writeError(w, http.StatusUnprocessableEntity, "no_working_days", "the selected dates contain no working days after applying the employee schedule and company holidays")
 		case errors.Is(err, store.ErrNotFound):
 			writeError(w, http.StatusNotFound, "employee_not_found", "employee does not exist in this organization")
 		default:
@@ -246,8 +287,11 @@ func (s *Server) createLeaveRequestV2(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.requested", "leave_request", request.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "leave_type": input.Type, "days": request.Days, "partial_day": input.PartialDay}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.requested", "leave_request", request.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "leave_type": input.Type, "days": request.Days, "partial_day": input.PartialDay})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, request)
 }
 
@@ -286,6 +330,8 @@ func (s *Server) decideLeaveRequestV2(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusNotFound, "leave_not_found", "leave request does not exist")
 		case errors.Is(err, store.ErrConflict):
 			writeError(w, http.StatusConflict, "leave_already_decided", "leave request is no longer pending")
+		case errors.Is(err, store.ErrNoWorkingDays):
+			writeError(w, http.StatusUnprocessableEntity, "no_working_days", "the current schedule and holidays leave no chargeable days")
 		case errors.Is(err, store.ErrInsufficientLeaveBalance):
 			writeError(w, http.StatusConflict, "insufficient_leave_balance", "the employee does not have enough available balance for this approval")
 		default:
@@ -293,8 +339,11 @@ func (s *Server) decideLeaveRequestV2(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave."+input.Decision, "leave_request", request.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": request.EmployeeID, "days": request.Days}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave."+input.Decision, "leave_request", request.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": request.EmployeeID, "days": request.Days})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, request)
 }
 
@@ -330,8 +379,11 @@ func (s *Server) cancelLeaveRequestV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "leave_cancel_error", "could not cancel leave request")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.cancelled", "leave_request", request.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": request.EmployeeID, "days": request.Days}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.cancelled", "leave_request", request.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": request.EmployeeID, "days": request.Days})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, request)
 }
 

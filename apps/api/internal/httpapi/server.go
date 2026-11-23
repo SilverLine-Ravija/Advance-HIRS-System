@@ -41,9 +41,9 @@ func NewHandler(store *store.Store, authManager *auth.Manager, allowedOrigin str
 	mux.HandleFunc("GET /api/v1/auth/me", server.authorize(server.me, "admin", "hr", "manager", "employee"))
 	mux.HandleFunc("GET /api/v1/dashboard", server.authorize(server.dashboard, "admin", "hr", "manager"))
 	mux.HandleFunc("GET /api/v1/employees", server.authorize(server.listEmployees, "admin", "hr", "manager"))
-	mux.HandleFunc("POST /api/v1/employees", server.authorize(server.createEmployee, "admin", "hr"))
-	mux.HandleFunc("PATCH /api/v1/employees/{id}", server.authorize(server.patchEmployee, "admin", "hr"))
-	mux.HandleFunc("DELETE /api/v1/employees/{id}", server.authorize(server.archiveEmployee, "admin", "hr"))
+	mux.HandleFunc("POST /api/v1/employees", server.authorize(server.atomic((*Server).createEmployee), "admin", "hr"))
+	mux.HandleFunc("PATCH /api/v1/employees/{id}", server.authorize(server.atomic((*Server).patchEmployee), "admin", "hr"))
+	mux.HandleFunc("DELETE /api/v1/employees/{id}", server.authorize(server.atomic((*Server).archiveEmployee), "admin", "hr"))
 	mux.HandleFunc("GET /api/v1/leave/requests", server.authorize(server.leaveRequests, "admin", "hr", "manager"))
 	return server.withMiddleware(mux)
 }
@@ -154,7 +154,10 @@ func (s *Server) createEmployee(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "employee_create_error", "could not create employee")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.created", "employee", employee.ID, `{}`)
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.created", "employee", employee.ID, `{}`); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, employee)
 }
 
@@ -177,7 +180,10 @@ func (s *Server) patchEmployee(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.updated", "employee", employee.ID, `{}`)
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.updated", "employee", employee.ID, `{}`); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, employee)
 }
 
@@ -192,7 +198,10 @@ func (s *Server) archiveEmployee(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "employee_archive_error", "could not archive employee")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.archived", "employee", employee.ID, `{}`)
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.archived", "employee", employee.ID, `{}`); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, employee)
 }
 

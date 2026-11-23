@@ -75,6 +75,25 @@ export default function LeaveWorkspace() {
 
   useEffect(() => { void loadBase(); }, []);
 
+  const previewEnd = partialDay === "full" ? endDate : startDate;
+  const previewBody = user && (!elevated || selectedEmployee) && startDate && previewEnd >= startDate
+    ? JSON.stringify({employee_id: elevated ? selectedEmployee : "", leave_type: leaveType, start_date: startDate, end_date: previewEnd, partial_day: partialDay})
+    : "";
+  const [preview, setPreview] = useState<{body: string; days?: number; error?: string} | null>(null);
+  useEffect(() => {
+    if (!previewBody) return;
+    const controller = new AbortController();
+    requestJSON<{days: number}>("/api/hr/leave/requests/preview", {
+      method: "POST", headers: {"Content-Type": "application/json"}, body: previewBody, signal: controller.signal,
+    }).then(({days}) => {
+      if (!controller.signal.aborted) setPreview({body: previewBody, days});
+    }).catch(() => {
+      if (!controller.signal.aborted) setPreview({body: previewBody, error: "Preview unavailable. Submitting will check the dates again."});
+    });
+    return () => controller.abort();
+  }, [previewBody]);
+  const currentPreview = preview?.body === previewBody ? preview : null;
+
   async function changeEmployee(employeeID: string) {
     setSelectedEmployee(employeeID);
     if (user) {
@@ -159,7 +178,7 @@ export default function LeaveWorkspace() {
 
     <section className={styles.mainGrid}>
       <article className={styles.panel}>
-        <div className={styles.panelHeading}><div><p>NEW REQUEST</p><h2>Request time away</h2></div><span>Weekends + holidays excluded</span></div>
+        <div className={styles.panelHeading}><div><p>NEW REQUEST</p><h2>Request time away</h2></div><span>Uses the employee’s work schedule</span></div>
         <form className={styles.form} onSubmit={submitLeave}>
           {elevated && <label>Employee<select required value={selectedEmployee} onChange={(event) => void changeEmployee(event.target.value)}>{employees.map((employee) => <option value={employee.id} key={employee.id}>{employee.name}</option>)}</select></label>}
           <div className={styles.fieldGrid}>
@@ -168,8 +187,9 @@ export default function LeaveWorkspace() {
           </div>
           <div className={styles.fieldGrid}>
             <label>Start<input required type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); if (partialDay !== "full") setEndDate(event.target.value); }} /></label>
-            <label>End<input required type="date" disabled={partialDay !== "full"} value={partialDay === "full" ? endDate : startDate} onChange={(event) => setEndDate(event.target.value)} /></label>
+            <label>End<input required type="date" min={startDate} disabled={partialDay !== "full"} value={partialDay === "full" ? endDate : startDate} onChange={(event) => setEndDate(event.target.value)} /></label>
           </div>
+          {previewBody && <p role="status">{currentPreview?.error ?? (currentPreview?.days === undefined ? "Checking scheduled days…" : currentPreview.days === 0 ? "No scheduled working days in this range after holidays." : `Chargeable leave: ${formatDays(currentPreview.days)}`)}</p>}
           <label>Reason<textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Optional context for your approver" /></label>
           <button className={styles.primary} disabled={busy === "create" || !startDate || (partialDay === "full" && !endDate)}>{busy === "create" ? "Submitting…" : "Submit request"}</button>
         </form>

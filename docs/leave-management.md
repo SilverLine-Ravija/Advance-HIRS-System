@@ -27,7 +27,7 @@ Tracked leave uses an **append-only ledger** for yearly entitlement, carry-over,
 
 ## Date calculations and overlap
 
-The request engine excludes weekends and matching company/location holidays from chargeable days. A half-day counts as **0.5** and must be a single calendar date. Overlapping pending or approved requests for the same employee are blocked at the PostgreSQL boundary, including concurrent requests.
+The request engine excludes non-working days on the effective employee or organization schedule and matching company/location holidays from chargeable days. A half-day counts as **0.5** and must be a single calendar date. Overlapping pending or approved requests for the same employee are blocked at the PostgreSQL boundary, including concurrent requests.
 
 Example: an annual leave request running Monday through Friday ordinarily charges five working days if no configured holidays or location-specific rules intervene. The actual count is computed by the backend.
 
