@@ -111,7 +111,7 @@ Default policies are provisioned per organization when first needed:
 
 HR/admins can customize entitlement, carry-over and negative-balance behavior from `/leave/admin`, create policy variants, assign policies to employees, post auditable manual adjustments, and manage company/location holidays.
 
-The request engine excludes weekends and matching holidays from day calculations. Half-day requests count as `0.5` and must be a single calendar date. PostgreSQL prevents overlapping pending/approved leave for the same employee, including concurrent submissions.
+The request engine excludes non-working days on the effective employee or organization schedule and matching holidays from day calculations. Half-day requests count as `0.5` and must be a single calendar date. PostgreSQL prevents overlapping pending/approved leave for the same employee, including concurrent submissions.
 
 ## Attendance Management v2
 

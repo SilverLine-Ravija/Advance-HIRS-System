@@ -82,8 +82,11 @@ func (s *Server) createAccessInvitation(w http.ResponseWriter, r *http.Request) 
 		}
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "access.invited", "access_invitation", invitation.ID,
-		workflowAuditMetadata(map[string]any{"email": invitation.Email, "role": invitation.Role, "employee_id": invitation.EmployeeID}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "access.invited", "access_invitation", invitation.ID,
+		workflowAuditMetadata(map[string]any{"email": invitation.Email, "role": invitation.Role, "employee_id": invitation.EmployeeID})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, map[string]any{
 		"invitation": invitation,
 		"token": rawToken,
@@ -101,7 +104,10 @@ func (s *Server) revokeAccessInvitation(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusInternalServerError, "invitation_revoke_error", "could not revoke invitation")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "access.invitation_revoked", "access_invitation", r.PathValue("id"), `{}`)
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "access.invitation_revoked", "access_invitation", r.PathValue("id"), `{}`); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"revoked": true})
 }
 
@@ -162,8 +168,11 @@ func (s *Server) acceptAccessInvitation(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusInternalServerError, "token_error", "could not create access token")
 		return
 	}
-	s.store.RecordAudit(r.Context(), identity.OrganizationID, identity.UserID, "access.invitation_accepted", "organization_membership", identity.UserID,
-		workflowAuditMetadata(map[string]any{"role": identity.Role, "new_user": createdUser}))
+	if err := s.store.RecordAudit(r.Context(), identity.OrganizationID, identity.UserID, "access.invitation_accepted", "organization_membership", identity.UserID,
+		workflowAuditMetadata(map[string]any{"role": identity.Role, "new_user": createdUser})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"access_token": token,
 		"token_type": "Bearer",

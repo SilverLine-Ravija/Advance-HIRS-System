@@ -23,17 +23,17 @@ func NewHandlerV2(dataStore *store.Store, authManager *auth.Manager, allowedOrig
 	mux.HandleFunc("GET /api/v1/auth/me", server.authorize(server.me, "admin", "hr", "manager", "employee"))
 	mux.HandleFunc("GET /api/v1/dashboard", server.authorize(server.dashboard, "admin", "hr", "manager"))
 	mux.HandleFunc("GET /api/v1/employees", server.authorize(server.listEmployees, "admin", "hr", "manager"))
-	mux.HandleFunc("POST /api/v1/employees", server.authorize(server.createEmployee, "admin", "hr"))
-	mux.HandleFunc("PATCH /api/v1/employees/{id}", server.authorize(server.patchEmployee, "admin", "hr"))
-	mux.HandleFunc("DELETE /api/v1/employees/{id}", server.authorize(server.archiveEmployee, "admin", "hr"))
+	mux.HandleFunc("POST /api/v1/employees", server.authorize(server.atomic((*Server).createEmployee), "admin", "hr"))
+	mux.HandleFunc("PATCH /api/v1/employees/{id}", server.authorize(server.atomic((*Server).patchEmployee), "admin", "hr"))
+	mux.HandleFunc("DELETE /api/v1/employees/{id}", server.authorize(server.atomic((*Server).archiveEmployee), "admin", "hr"))
 
 	mux.HandleFunc("GET /api/v1/leave/requests", server.authorize(server.workflowLeaveRequests, "admin", "hr", "manager", "employee"))
-	mux.HandleFunc("POST /api/v1/leave/requests", server.authorize(server.createLeaveRequest, "admin", "hr", "manager", "employee"))
-	mux.HandleFunc("POST /api/v1/leave/requests/{id}/decision", server.authorize(server.decideLeaveRequest, "admin", "hr", "manager"))
+	mux.HandleFunc("POST /api/v1/leave/requests", server.authorize(server.atomic((*Server).createLeaveRequest), "admin", "hr", "manager", "employee"))
+	mux.HandleFunc("POST /api/v1/leave/requests/{id}/decision", server.authorize(server.atomic((*Server).decideLeaveRequest), "admin", "hr", "manager"))
 
 	mux.HandleFunc("GET /api/v1/attendance", server.authorize(server.attendance, "admin", "hr", "manager", "employee"))
-	mux.HandleFunc("POST /api/v1/attendance/check-in", server.authorize(server.checkIn, "admin", "hr", "manager", "employee"))
-	mux.HandleFunc("POST /api/v1/attendance/check-out", server.authorize(server.checkOut, "admin", "hr", "manager", "employee"))
+	mux.HandleFunc("POST /api/v1/attendance/check-in", server.authorize(server.atomic((*Server).checkIn), "admin", "hr", "manager", "employee"))
+	mux.HandleFunc("POST /api/v1/attendance/check-out", server.authorize(server.atomic((*Server).checkOut), "admin", "hr", "manager", "employee"))
 	mux.HandleFunc("GET /api/v1/audit", server.authorize(server.auditEvents, "admin", "hr"))
 
 	return server.withMiddleware(mux)
@@ -89,8 +89,11 @@ func (s *Server) createLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "leave_create_error", "could not create leave request")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.requested", "leave_request", request.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "leave_type": input.Type}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave.requested", "leave_request", request.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "leave_type": input.Type})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, request)
 }
 
@@ -136,8 +139,11 @@ func (s *Server) decideLeaveRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave."+input.Decision, "leave_request", request.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": request.EmployeeID, "note": input.Note}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "leave."+input.Decision, "leave_request", request.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": request.EmployeeID, "note": input.Note})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, request)
 }
 
@@ -192,8 +198,11 @@ func (s *Server) checkIn(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "attendance_checkin_error", "could not check in")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.checked_in", "attendance", entry.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "work_mode": input.WorkMode}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.checked_in", "attendance", entry.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "work_mode": input.WorkMode})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, entry)
 }
 
@@ -217,8 +226,11 @@ func (s *Server) checkOut(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "attendance_checkout_error", "could not check out")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.checked_out", "attendance", entry.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": employeeID}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.checked_out", "attendance", entry.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": employeeID})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, entry)
 }
 

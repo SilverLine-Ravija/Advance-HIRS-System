@@ -46,8 +46,11 @@ func (s *Server) assignWorkScheduleSafeV2(w http.ResponseWriter, r *http.Request
 		}
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.schedule_assigned", "work_schedule", input.ScheduleID,
-		workflowAuditMetadata(map[string]any{"employee_id": input.EmployeeID, "effective_from": input.EffectiveFrom, "effective_to": input.EffectiveTo}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.schedule_assigned", "work_schedule", input.ScheduleID,
+		workflowAuditMetadata(map[string]any{"employee_id": input.EmployeeID, "effective_from": input.EffectiveFrom, "effective_to": input.EffectiveTo})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusCreated, map[string]any{"assigned": true})
 }
 
@@ -75,7 +78,10 @@ func (s *Server) checkOutTodayV2(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "attendance_checkout_error", "could not check out")
 		return
 	}
-	s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.checked_out", "attendance", entry.ID,
-		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "worked_minutes": entry.WorkedMinutes, "overtime_minutes": entry.OvertimeMinutes}))
+	if err := s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "attendance.checked_out", "attendance", entry.ID,
+		workflowAuditMetadata(map[string]any{"employee_id": employeeID, "worked_minutes": entry.WorkedMinutes, "overtime_minutes": entry.OvertimeMinutes})); err != nil {
+		writeError(w, http.StatusInternalServerError, "audit_failed", "could not record this change")
+		return
+	}
 	writeJSON(w, http.StatusOK, entry)
 }

@@ -185,3 +185,81 @@ func mustDate(t *testing.T, value string) time.Time {
 	}
 	return parsed
 }
+
+func TestScheduledLeaveAndAuditRollback(t *testing.T) {
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		t.Skip("DATABASE_URL is not configured")
+	}
+	ctx := context.Background()
+	db, err := Open(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	org, err := db.BootstrapV2(ctx, "Calendar test", fmt.Sprintf("calendar-%d", time.Now().UnixNano()), "", "", "", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.pool.Exec(ctx, `DELETE FROM organizations WHERE id=$1`, org)
+
+	start, end := mustDate(t, "2026-10-09"), mustDate(t, "2026-10-10")
+	pending, err := db.CreateLeaveRequestV2(ctx, org, "emp_001", "annual", start, end, "full", "")
+	if err != nil || pending.Days != 1 {
+		t.Fatalf("initial request: %#v, %v", pending, err)
+	}
+	schedule, err := db.UpsertWorkSchedule(ctx, org, model.UpsertWorkSchedule{
+		Code: "weekend", Name: "Weekend", Timezone: "UTC", StartTime: "09:00", EndTime: "17:00", WorkDays: []int{0, 6},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = db.AssignWorkScheduleSafe(ctx, org, schedule.ID, model.WorkScheduleAssignment{
+		EmployeeID: "emp_001", EffectiveFrom: "2026-10-10", EffectiveTo: "2026-10-12",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	days, _, err := db.CalculateLeaveDays(ctx, org, "emp_001", end, end, "first_half")
+	if err != nil || days != 0.5 {
+		t.Fatalf("Saturday half day: %v, %v", days, err)
+	}
+	monday := mustDate(t, "2026-10-12")
+	if _, _, err := db.CalculateLeaveDays(ctx, org, "emp_001", monday, monday, "full"); !errors.Is(err, ErrNoWorkingDays) {
+		t.Fatalf("Monday should be off: %v", err)
+	}
+
+	approve := func(scoped *Store) error {
+		approved, err := scoped.DecideLeaveRequestV2(ctx, org, pending.ID, "", "approved", "", "")
+		if err == nil && approved.Days != 2 {
+			t.Fatalf("expected 2 approved days, got %v", approved.Days)
+		}
+		return err
+	}
+	var auditErr error
+	err = db.InTransaction(ctx, func(scoped *Store) error {
+		if err := approve(scoped); err != nil {
+			return err
+		}
+		// Invalid metadata forces the audit INSERT to fail after the approval.
+		auditErr = scoped.RecordAudit(ctx, org, "", "leave.approved", "leave_request", pending.ID, "{")
+		return auditErr
+	})
+	if err == nil || auditErr == nil {
+		t.Fatalf("expected audit failure, got %v / %v", err, auditErr)
+	}
+	var status string
+	var debits int
+	if err := db.pool.QueryRow(ctx, `SELECT status, (SELECT count(*) FROM leave_balance_ledger WHERE leave_request_id=$1) FROM leave_requests WHERE id=$1`, pending.ID).Scan(&status, &debits); err != nil {
+		t.Fatal(err)
+	}
+	if status != "pending" || debits != 0 {
+		t.Fatalf("partial approval: status=%s debits=%d", status, debits)
+	}
+	if err := db.InTransaction(ctx, func(scoped *Store) error {
+		if err := approve(scoped); err != nil {
+			return err
+		}
+		return scoped.RecordAudit(ctx, org, "", "leave.approved", "leave_request", pending.ID, "{}")
+	}); err != nil { t.Fatal(err) }
+}
