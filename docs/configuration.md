@@ -26,7 +26,6 @@ Advance HRIS has three deployable server-side components in the full agentic set
 | `OPENAI_API_KEY` | Agent | Model-provider secret |
 | `OPENAI_MODEL` | Agent | Model identifier (default `gpt-4.1-mini` in source) |
 | `OPENAI_BASE_URL` | Agent | OpenAI-compatible API base URL |
-| `ADVANCE_HRIS_API_URL` | Desktop | Optional Go API URL override |
 
 `BOOTSTRAP_ORG_*`, `BOOTSTRAP_ADMIN_*`, `SEED_DEMO_DATA` and `SEED_DEMO_PASSWORD` are intended for local bootstrap only. Disable demo seeding and remove sample accounts in all shared deployments.
 

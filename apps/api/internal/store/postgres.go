@@ -292,62 +292,6 @@ func (s *Store) LeaveRequests(ctx context.Context, orgID string) ([]model.LeaveR
 	return requests, rows.Err()
 }
 
-func (s *Store) SyncUpsertEmployee(ctx context.Context, orgID string, incoming model.Employee, baseVersion int64) (model.Employee, bool, error) {
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return model.Employee{}, false, err
-	}
-	defer tx.Rollback(ctx)
-
-	current, err := scanEmployee(tx.QueryRow(ctx, employeeSelect+`
-		WHERE organization_id = $1::uuid AND id = $2 FOR UPDATE`, orgID, incoming.ID))
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return model.Employee{}, false, err
-	}
-
-	incoming = normalizeSyncedEmployee(incoming)
-	if errors.Is(err, pgx.ErrNoRows) {
-		created, err := scanEmployee(tx.QueryRow(ctx, `
-			INSERT INTO employees (
-				id, organization_id, employee_number, first_name, last_name, work_email,
-				job_title, department, location, employment_type, status, server_version
-			) VALUES ($1, $2::uuid, $3, $4, $5, lower($6), $7, $8, $9, $10, $11, 1)
-			RETURNING id, employee_number, first_name, last_name, work_email,
-			          COALESCE(job_title, ''), COALESCE(department, ''), COALESCE(location, ''),
-			          employment_type, status, server_version, updated_at`,
-			incoming.ID, orgID, incoming.EmployeeNumber, incoming.FirstName, incoming.LastName,
-			incoming.WorkEmail, incoming.Role, incoming.Department, incoming.Location,
-			incoming.EmploymentType, incoming.Status))
-		if err != nil {
-			return model.Employee{}, false, err
-		}
-		if err := tx.Commit(ctx); err != nil {
-			return model.Employee{}, false, err
-		}
-		return created, false, nil
-	}
-
-	if baseVersion != 0 && baseVersion < current.ServerVersion {
-		return current, true, nil
-	}
-	updated, err := scanEmployee(tx.QueryRow(ctx, `
-		UPDATE employees SET first_name=$3, last_name=$4, job_title=$5, department=$6,
-		       location=$7, status=$8, server_version=server_version+1, updated_at=now()
-		WHERE organization_id=$1::uuid AND id=$2
-		RETURNING id, employee_number, first_name, last_name, work_email,
-		          COALESCE(job_title, ''), COALESCE(department, ''), COALESCE(location, ''),
-		          employment_type, status, server_version, updated_at`,
-		orgID, incoming.ID, incoming.FirstName, incoming.LastName, incoming.Role,
-		incoming.Department, incoming.Location, incoming.Status))
-	if err != nil {
-		return model.Employee{}, false, err
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return model.Employee{}, false, err
-	}
-	return updated, false, nil
-}
-
 func (s *Store) RecordAudit(ctx context.Context, orgID, userID, action, resourceType, resourceID string, metadata string) {
 	if metadata == "" {
 		metadata = `{}`
@@ -377,37 +321,6 @@ func scanEmployee(row rowScanner) (model.Employee, error) {
 	)
 	employee.Name = strings.TrimSpace(employee.FirstName + " " + employee.LastName)
 	return employee, err
-}
-
-func normalizeSyncedEmployee(employee model.Employee) model.Employee {
-	if employee.ID == "" {
-		employee.ID = "emp_unknown"
-	}
-	if employee.FirstName == "" && employee.LastName == "" {
-		parts := strings.Fields(employee.Name)
-		if len(parts) > 0 {
-			employee.FirstName = parts[0]
-			if len(parts) > 1 {
-				employee.LastName = strings.Join(parts[1:], " ")
-			}
-		}
-	}
-	if employee.FirstName == "" {
-		employee.FirstName = "Unknown"
-	}
-	if employee.EmployeeNumber == "" {
-		employee.EmployeeNumber = strings.ToUpper(strings.Replace(employee.ID, "emp_", "EMP-", 1))
-	}
-	if employee.WorkEmail == "" {
-		employee.WorkEmail = employee.ID + "@desktop.local.invalid"
-	}
-	if employee.EmploymentType == "" {
-		employee.EmploymentType = "full_time"
-	}
-	if employee.Status == "" {
-		employee.Status = "active"
-	}
-	return employee
 }
 
 func newEmployeeID() (string, error) {

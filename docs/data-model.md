@@ -7,7 +7,7 @@ permalink: /data-model/
 
 # Data model and migrations
 
-PostgreSQL is the authoritative cloud system of record. The Wails desktop uses encrypted SQLite as a local cache and operation queue.
+PostgreSQL is the authoritative cloud system of record.
 
 ## Core entity groups
 

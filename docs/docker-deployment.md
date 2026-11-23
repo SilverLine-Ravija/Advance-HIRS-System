@@ -79,7 +79,7 @@ docker compose --env-file .env.production \
   up -d --build
 ```
 
-The API and agent have **no host-published ports**. The Next.js portal binds only to the host loopback interface. Configure your HTTPS reverse proxy to serve the exact `WEB_ORIGIN` and route to `127.0.0.1:3000`. A remote desktop client needs a separately authenticated, secured API ingress; it cannot use this stack's private API URL directly.
+The API and agent have **no host-published ports**. The Next.js portal binds only to the host loopback interface. Configure your HTTPS reverse proxy to serve the exact `WEB_ORIGIN` and route to `127.0.0.1:3000`.
 
 ### Initial organization provisioning
 

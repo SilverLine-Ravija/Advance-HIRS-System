@@ -49,7 +49,5 @@ func NewHandlerV4(dataStore *store.Store, authManager *auth.Manager, allowedOrig
 	mux.HandleFunc("POST /api/v1/attendance/check-out", server.authorize(server.checkOut, "admin", "hr", "manager", "employee"))
 	mux.HandleFunc("GET /api/v1/audit", server.authorize(server.auditEvents, "admin", "hr"))
 
-	mux.HandleFunc("POST /api/v1/sync/push", server.authorize(server.syncPush, "admin", "hr"))
-	mux.HandleFunc("GET /api/v1/sync/pull", server.authorize(server.syncPull, "admin", "hr"))
 	return server.withMiddleware(mux)
 }

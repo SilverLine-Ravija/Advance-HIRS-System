@@ -7,7 +7,7 @@ permalink: /openchoreo/
 
 # OpenChoreo deployment model
 
-Advance HRIS is structured as a realistic multi-component workload: a public web experience, a protected Go application API, PostgreSQL, and an optional native HR/admin desktop client using the same API.
+Advance HRIS is structured as a realistic multi-component workload: a public web experience, a protected Go application API and PostgreSQL.
 
 ## Components
 
@@ -56,18 +56,14 @@ All agent calls remain subject to the existing HRIS API role checks and employee
 
 Use managed PostgreSQL or an environment-specific data-plane resource. The optional agent uses dedicated action-state tables; isolate that database role from the core HR data tables. Run `db/migrate.sh` (or an equivalent controlled migration job) before promoting API traffic. Production should add a schema-version registry and release-level migration orchestration before the first stable release.
 
-### Desktop
-
-`apps/desktop` is distributed to HR/admin workstations rather than deployed as an OpenChoreo component. It connects to the environment's public/protected API, stores HR data encrypted locally, and keeps its bearer session in the operating-system keychain.
-
 ## Security boundaries
 
 - Organization ID is derived from the authenticated token, never trusted from request payloads.
 - Employee reads/writes are scoped by organization in SQL.
-- `admin` and `hr` may mutate employee records and use desktop sync.
+- `admin` and `hr` may mutate employee records.
 - `manager` has self-service plus direct-report leave/attendance review.
 - `employee` has self-service leave/attendance and no broad workforce-directory access.
-- Audit events capture employee, access, leave, attendance and sync workflow mutations.
+- Audit events capture employee, access, leave and attendance workflow mutations.
 
 ## Suggested environments
 
@@ -81,6 +77,5 @@ Use managed PostgreSQL or an environment-specific data-plane resource. The optio
 2. Attach managed PostgreSQL to the API through a secret `DATABASE_URL`.
 3. Inject `JWT_SECRET` and environment-specific CORS origin.
 4. Demonstrate login and tenant-scoped employee API calls.
-5. Demonstrate the Wails desktop synchronizing through the same API.
-6. Promote development to staging without rebuilding application architecture.
+5. Promote development to staging without rebuilding application architecture.
 7. Add logs, traces and security/audit dashboards before production promotion.

@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Fix setup, login, agent, desktop sync, attendance and documentation publishing problems.
+description: Fix setup, login, agent, attendance and documentation publishing problems.
 section: docs
 permalink: /troubleshooting/
 ---
@@ -48,14 +48,6 @@ Common causes: overlapping pending/approved leave, a range with no working days,
 ## Attendance summary shows unexpected hours
 
 Check effective dates, assigned timezone, schedule start/end, breaks, grace period and overtime threshold. Old attendance rows retain snapshotted schedule settings. Review correction history rather than rewriting payroll-ready period totals manually.
-
-## Desktop cannot synchronize
-
-- Confirm the cloud API is reachable and the token remains authorized.
-- Verify OS keychain permissions and the locally encrypted SQLite cache.
-- Review pending queue counts and the returned conflict list.
-- A conflict means the server version advanced; it is not safe to discard one side automatically.
-- Cloud pulls intentionally do not replace records with pending local edits.
 
 ## GitHub Pages site is missing or deploy fails
 

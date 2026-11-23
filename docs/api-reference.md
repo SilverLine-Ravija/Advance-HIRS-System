@@ -246,20 +246,6 @@ Used for payroll-ready period summaries.
 
 Roles: admin, hr.
 
-## Desktop sync
-
-### POST /sync/push
-
-Roles: admin, hr.
-
-Pushes queued employee mutations with base server versions.
-
-### GET /sync/pull
-
-Roles: admin, hr.
-
-Returns server state for reconciliation.
-
 ## Agent service endpoints
 
 The optional agent has its **own** API, distinct from the business `/api/v1` endpoints. The authenticated Next.js web application proxies AI requests through these same-origin routes:

@@ -118,8 +118,6 @@ Pull requests should pass:
 - API Go tests/build against the API's declared Go version;
 - PostgreSQL integration tests;
 - migration idempotency check;
-- desktop React build;
-- desktop core tests;
 - API container build.
 
 ## Known product boundaries
@@ -131,7 +129,6 @@ These are not complete product modules yet:
 - recruitment pipeline;
 - employee document repository and notification delivery;
 - enterprise SSO/OIDC, refresh-token rotation and centralized session/device management;
-- full desktop conflict-resolution UI;
 - a production-hardened AI HR copilot (an initial permission-aware assistant now exists, but needs vendor privacy review, stronger abuse controls and operational validation).
 
 Do not expose placeholder navigation as if these features were implemented.
@@ -144,9 +141,8 @@ Do not expose placeholder navigation as if these features were implemented.
 4. automated backup/restore validation;
 5. payroll domain built on attendance period summaries;
 6. document storage and notification provider abstraction;
-7. desktop conflict-resolution UX;
-8. performance/recruiting domains;
-9. evaluate and production-harden the existing permission-aware AI assistant, including provider privacy reviews, prompt-injection tests, spend limits and cross-tenant integration tests.
+7. performance/recruiting domains;
+8. evaluate and production-harden the existing permission-aware AI assistant, including provider privacy reviews, prompt-injection tests, spend limits and cross-tenant integration tests.
 
 
 ## Separate Compose template is not production approval

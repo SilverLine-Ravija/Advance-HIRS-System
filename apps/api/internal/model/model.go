@@ -61,13 +61,6 @@ type LeaveRequest struct {
 	Status   string `json:"status"`
 }
 
-type SyncConflict struct {
-	OperationID   string   `json:"operation_id"`
-	EntityID      string   `json:"entity_id"`
-	ServerVersion int64    `json:"server_version"`
-	ServerRecord  Employee `json:"server_record"`
-}
-
 type LoginIdentity struct {
 	Principal
 	PasswordHash string

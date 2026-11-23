@@ -16,7 +16,6 @@ Advance HRIS processes personnel records, attendance and leave data. Its current
 | Browser | Server-side Next.js BFF and HttpOnly/SameSite cookie | Session revocation, CSRF review and abuse protection |
 | Go HRIS API | JWT validation, role checks, active-membership enforcement, hashed session revocation and tenant-scoped queries | SSO/OIDC, refresh token rotation, centralized controls and security review |
 | PostgreSQL | Organization-scoped records and transactional leave/attendance workflows | Managed backups, least-privilege database users and tested restores |
-| Desktop | AES-256-GCM encrypted SQLite payloads, OS keychain token storage | Device posture, lost-device response and mature conflict resolution UX |
 | AI service | Authenticated tools, allowed operations, user-bound proposed actions | Model privacy review, prompt-injection evaluation, ingress throttling and ongoing monitoring |
 | GitHub Pages | Public static documentation | Never host employee records, API credentials or live backend secrets |
 

@@ -9,7 +9,7 @@ permalink: /faq/
 
 ## What exactly is Advance HRIS?
 
-A multi-component HR information system with a Next.js portal, a Wails desktop interface for HR/admins, a Go business API and PostgreSQL persistence. It includes leave, attendance, employee administration, an audit trail and an optional Go-based AI assistant.
+A multi-component HR information system with a Next.js portal, a Go business API and PostgreSQL persistence. It includes leave, attendance, employee administration, an audit trail and an optional Go-based AI assistant.
 
 ## Is GitHub Pages the application itself?
 
@@ -21,7 +21,7 @@ No. The implemented agent can read authorized records and prepare certain writes
 
 ## Can I use the HRIS without an AI provider key?
 
-Yes. The core Go API, Next.js portal and desktop workflows do not need the optional agent. The AI assistant requires a compatible model provider and its own private service.
+Yes. The core Go API, Next.js portal do not need the optional agent. The AI assistant requires a compatible model provider and its own private service.
 
 ## Is payroll complete?
 
@@ -34,10 +34,6 @@ Not yet. Those are roadmap modules and should not be described to customers as w
 ## Can an employee see colleagues' personal records?
 
 The employee role is restricted to self-service. Managers can see their own and permitted direct-report information only, subject to individual endpoint rules. HR/admin use organization-wide administrative scopes.
-
-## Is the desktop fully offline?
-
-Employee record edits are local-first and queued for synchronization, but an online validated session is required before unlocking employee data. Full offline conflict resolution and a native offline AI assistant are not shipped.
 
 ## Is this production-ready for live employee data?
 

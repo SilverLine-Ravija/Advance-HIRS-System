@@ -7,7 +7,7 @@ import (
 	"github.com/savisaluwadana/Advance-HIRS-System/apps/api/internal/store"
 )
 
-// NewHandlerV5 preserves the access, leave, sync and audit surfaces from V4 and
+// NewHandlerV5 preserves the access, leave and audit surfaces from V4 and
 // adds schedule-aware attendance, correction approvals and period summaries.
 func NewHandlerV5(dataStore *store.Store, authManager *auth.Manager, allowedOrigin string) http.Handler {
 	server := &Server{store: dataStore, auth: authManager, allowedOrigin: allowedOrigin}
@@ -56,7 +56,5 @@ func NewHandlerV5(dataStore *store.Store, authManager *auth.Manager, allowedOrig
 	mux.HandleFunc("GET /api/v1/attendance/timesheet", server.authorize(server.attendanceTimesheetV2, "admin", "hr", "manager", "employee"))
 
 	mux.HandleFunc("GET /api/v1/audit", server.authorize(server.auditEvents, "admin", "hr"))
-	mux.HandleFunc("POST /api/v1/sync/push", server.authorize(server.syncPush, "admin", "hr"))
-	mux.HandleFunc("GET /api/v1/sync/pull", server.authorize(server.syncPull, "admin", "hr"))
 	return server.withMiddleware(mux)
 }

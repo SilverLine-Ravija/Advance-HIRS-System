@@ -7,7 +7,7 @@ permalink: /access-and-tenancy/
 
 # Access, roles and tenancy
 
-The core authorization boundary is the **Go HRIS API**, not the browser, desktop UI or language model.
+The core authorization boundary is the **Go HRIS API**, not the browser or language model.
 
 ## Roles and scope
 

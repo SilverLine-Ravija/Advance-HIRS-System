@@ -33,20 +33,6 @@ type loginRequest struct {
 	OrganizationSlug string `json:"organization_slug"`
 }
 
-type syncOperation struct {
-	ID          string          `json:"id"`
-	EntityType  string          `json:"entity_type"`
-	EntityID    string          `json:"entity_id"`
-	Action      string          `json:"action"`
-	Payload     json.RawMessage `json:"payload"`
-	BaseVersion int64           `json:"base_version"`
-	ChangedAt   time.Time       `json:"changed_at"`
-}
-
-type syncPushRequest struct {
-	Operations []syncOperation `json:"operations"`
-}
-
 func NewHandler(store *store.Store, authManager *auth.Manager, allowedOrigin string) http.Handler {
 	server := &Server{store: store, auth: authManager, allowedOrigin: allowedOrigin}
 	mux := http.NewServeMux()
@@ -59,8 +45,6 @@ func NewHandler(store *store.Store, authManager *auth.Manager, allowedOrigin str
 	mux.HandleFunc("PATCH /api/v1/employees/{id}", server.authorize(server.patchEmployee, "admin", "hr"))
 	mux.HandleFunc("DELETE /api/v1/employees/{id}", server.authorize(server.archiveEmployee, "admin", "hr"))
 	mux.HandleFunc("GET /api/v1/leave/requests", server.authorize(server.leaveRequests, "admin", "hr", "manager"))
-	mux.HandleFunc("POST /api/v1/sync/push", server.authorize(server.syncPush, "admin", "hr"))
-	mux.HandleFunc("GET /api/v1/sync/pull", server.authorize(server.syncPull, "admin", "hr"))
 	return server.withMiddleware(mux)
 }
 
@@ -220,59 +204,6 @@ func (s *Server) leaveRequests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"data": requests, "total": len(requests)})
-}
-
-func (s *Server) syncPush(w http.ResponseWriter, r *http.Request) {
-	principal := principalFromContext(r.Context())
-	var request syncPushRequest
-	if err := decodeJSON(r, &request); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_sync_request", err.Error())
-		return
-	}
-	accepted := make([]string, 0, len(request.Operations))
-	conflicts := make([]model.SyncConflict, 0)
-	for _, operation := range request.Operations {
-		if operation.EntityType != "employee" || operation.Action != "upsert" || operation.EntityID == "" {
-			continue
-		}
-		var incoming model.Employee
-		if err := json.Unmarshal(operation.Payload, &incoming); err != nil {
-			continue
-		}
-		if incoming.ID == "" {
-			incoming.ID = operation.EntityID
-		}
-		updated, conflict, err := s.store.SyncUpsertEmployee(r.Context(), principal.OrganizationID, incoming, operation.BaseVersion)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "sync_error", "could not apply desktop changes")
-			return
-		}
-		if conflict {
-			conflicts = append(conflicts, model.SyncConflict{
-				OperationID: operation.ID, EntityID: incoming.ID,
-				ServerVersion: updated.ServerVersion, ServerRecord: updated,
-			})
-			continue
-		}
-		accepted = append(accepted, operation.ID)
-		s.store.RecordAudit(r.Context(), principal.OrganizationID, principal.UserID, "employee.synced", "employee", incoming.ID, `{}`)
-	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"accepted": accepted, "conflicts": conflicts, "server_time": time.Now().UTC(),
-	})
-}
-
-func (s *Server) syncPull(w http.ResponseWriter, r *http.Request) {
-	principal := principalFromContext(r.Context())
-	employees, err := s.store.ListEmployees(r.Context(), principal.OrganizationID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "sync_error", "could not load cloud snapshot")
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"employees": employees,
-		"cursor":    time.Now().UTC().Format(time.RFC3339Nano),
-	})
 }
 
 func (s *Server) authorize(next http.HandlerFunc, roles ...string) http.HandlerFunc {

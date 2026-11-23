@@ -1,6 +1,6 @@
 ---
 title: Testing and quality assurance
-description: How to verify the API, web, desktop, agent and static documentation.
+description: How to verify the API, web, agent and static documentation.
 section: docs
 permalink: /testing/
 ---
@@ -39,19 +39,6 @@ npm run build
 
 Use the signed-in browser session to test each role. Check that the assistant interface does not expose the bearer token to client-side code.
 
-## Desktop
-
-```sh
-cd apps/desktop/frontend
-npm install
-npm run build
-
-cd ../
-go test ./internal/...
-```
-
-Native Wails packaging is separate from frontend unit/build checks and requires target OS testing.
-
 ## Full local smoke test
 
 ```sh
@@ -60,7 +47,7 @@ docker compose ps
 curl --fail http://localhost:8080/health
 ```
 
-Test web login, employee view, leave request, attendance entry, manager decision and sync. When the agent overlay is enabled, verify read-only tools and prepare/confirm functionality on disposable demo data.
+Test web login, employee view, leave request, attendance entry, manager decision. When the agent overlay is enabled, verify read-only tools and prepare/confirm functionality on disposable demo data.
 
 ## Static documentation
 
@@ -89,7 +76,6 @@ The GitHub workflow itself is the authoritative Jekyll build test; its action co
 - Leave approvals debit only once; cancellation reverses according to policy.
 - Attendance corrections require a real reason and authorized review.
 - Agent proposals show an exact preview, expire and never run without explicit confirmation.
-- Desktop cloud pulls preserve pending local edits; version conflicts are visible.
 
 Keep synthetic data in public screenshots and CI logs. Related: [security]({{ '/security-and-privacy/' | relative_url }}) · [Troubleshooting]({{ '/troubleshooting/' | relative_url }}).
 

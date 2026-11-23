@@ -1,6 +1,6 @@
 ---
 title: People operations, intelligently connected
-description: Explore Advance HRIS, a local-first human resources platform with policy-aware workflows and a confirmation-gated AI assistant.
+description: Explore Advance HRIS, a web-based human resources platform with policy-aware workflows and a confirmation-gated AI assistant.
 permalink: /
 ---
 <section class="hero">
@@ -13,7 +13,7 @@ permalink: /
         <a href="{{ '/capabilities/' | relative_url }}" class="btn btn-primary">Explore capabilities <span aria-hidden="true">↗</span></a>
         <a href="{{ '/docs/' | relative_url }}" class="btn btn-secondary">Read the documentation <span aria-hidden="true">→</span></a>
       </div>
-      <div class="tiny-proof" aria-label="Technical features"><span>Role-scoped access</span><span>Human-approved AI actions</span><span>Local-first desktop</span></div>
+      <div class="tiny-proof" aria-label="Technical features"><span>Role-scoped access</span><span>Human-approved AI actions</span></div>
     </div>
     <div class="app-preview" aria-label="Illustrative assistant workflow, not a live application screenshot">
       <div class="preview-top"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="preview-label">ADVANCE / ASSISTANT</div><div class="chip">Illustrative preview</div></div>
@@ -35,7 +35,6 @@ permalink: /
       <a class="feature-card" href="{{ '/capabilities/' | relative_url }}"><span class="feature-icon" aria-hidden="true">◷</span><h3>Leave management</h3><p>Entitlements, balances, carry-over, company holidays, half-days, approvals and auditable ledger updates.</p><span class="feature-tag">Policy-backed accounting →</span></a>
       <a class="feature-card" href="{{ '/capabilities/' | relative_url }}"><span class="feature-icon" aria-hidden="true">◴</span><h3>Attendance intelligence</h3><p>Schedule-aware check-ins, overtime, exceptions, corrections and payroll-ready period summaries.</p><span class="feature-tag">Time and attendance →</span></a>
       <a class="feature-card" href="{{ '/capabilities/' | relative_url }}"><span class="feature-icon" aria-hidden="true">♙</span><h3>People directory</h3><p>Employee records, organizational roles, manager visibility, secure invitations and archive workflows.</p><span class="feature-tag">Scoped employee administration →</span></a>
-      <a class="feature-card" href="{{ '/architecture/' | relative_url }}"><span class="feature-icon" aria-hidden="true">▣</span><h3>Local-first HR desktop</h3><p>A native Wails console with encrypted local employee data and a durable synchronization queue.</p><span class="feature-tag">Online and offline workflows →</span></a>
       <a class="feature-card" href="{{ '/production-readiness/' | relative_url }}"><span class="feature-icon" aria-hidden="true">◇</span><h3>Clear trust boundaries</h3><p>Organization-scoped records, role checks, signed sessions, audit events and approval-gated AI mutations.</p><span class="feature-tag">Security by design →</span></a>
     </div>
   </div>
@@ -55,13 +54,12 @@ permalink: /
     <div>
       <span class="eyebrow">REAL ENGINEERING FOUNDATION</span>
       <h2>Built as a system, not a demo chatbot.</h2>
-      <p class="lead">A multi-component architecture with a Next.js web portal, native HR desktop, Go business API and separate Go agent service. Designed to be deployed as an OpenChoreo workload.</p>
+      <p class="lead">A multi-component architecture with a Next.js web portal, Go business API and separate Go agent service. Designed to be deployed as an OpenChoreo workload.</p>
       <a class="btn btn-secondary" href="{{ '/architecture/' | relative_url }}">Explore architecture <span aria-hidden="true">→</span></a>
     </div>
-    <div class="arch-visual" role="img" aria-label="Web portal and desktop connect to protected Go API; web portal also connects to a private agent service; both services use PostgreSQL for separate authorized purposes.">
+    <div class="arch-visual" role="img" aria-label="Web portal connects to protected Go API; web portal also connects to a private agent service; both services use PostgreSQL for separate authorized purposes.">
       <div class="arch-lane">
         <div class="arch-node"><strong>Next.js Web</strong><small>Employee & manager portal</small></div>
-        <div class="arch-node"><strong>Wails Desktop</strong><small>HR/admin local-first</small></div>
       </div>
       <div class="arch-arrow" aria-hidden="true">↓</div>
       <div class="arch-lane">
@@ -77,8 +75,8 @@ permalink: /
   <div class="container">
     <div class="section-heading"><span class="eyebrow">HONEST PRODUCT STATUS</span><h2>What works today. What comes next.</h2></div>
     <div class="split-panel">
-      <div><span class="status-pill">Implemented in repository</span><h3>Functional foundation</h3><ul><li>Leave, attendance and employee management</li><li>Role-based access and invitations</li><li>Native desktop sync and audit trails</li><li>AI assistant with role-scoped tools and one-time action confirmation</li></ul></div>
-      <div><span class="status-pill planned">Not yet implemented</span><h3>Future product modules</h3><ul><li>Full payroll and compensation processing</li><li>Recruiting and performance management</li><li>Handbook/document retrieval and messaging integrations</li><li>Unattended agent jobs and native offline desktop AI</li></ul></div>
+      <div><span class="status-pill">Implemented in repository</span><h3>Functional foundation</h3><ul><li>Leave, attendance and employee management</li><li>Role-based access and invitations</li><li>Organization audit trails</li><li>AI assistant with role-scoped tools and one-time action confirmation</li></ul></div>
+      <div><span class="status-pill planned">Not yet implemented</span><h3>Future product modules</h3><ul><li>Full payroll and compensation processing</li><li>Recruiting and performance management</li><li>Handbook/document retrieval and messaging integrations</li><li>Unattended agent jobs</li></ul></div>
     </div>
     <div class="detail-banner"><strong>Implementation preview, not a production certification.</strong> Security hardening, SSO, session revocation, backups and production monitoring still require work before real employee data is used.</div>
   </div>

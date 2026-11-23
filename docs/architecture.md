@@ -1,6 +1,6 @@
 ---
 title: System architecture
-description: Understand HRIS components, trust boundaries, tenancy and local-first design.
+description: Understand HRIS components, trust boundaries, and tenant isolation.
 section: docs
 permalink: /architecture/
 ---
@@ -10,25 +10,16 @@ permalink: /architecture/
 ## System overview
 
 ```text
-Employees / Managers                       HR / Admins
-        |                                      |
-        v                                      v
-Next.js web portal                    Wails + React desktop
-        |                                      |
-        |                              encrypted local SQLite
-        |                                      |
-        |                               durable sync queue
-        +------------------+-------------------+
-                           |
-                           v
-                      Go HTTP API
-                auth + RBAC + tenant scope
-                           |
-                           v
-                       PostgreSQL
+Employees, managers, HR and admins
+                |
+         Next.js web portal
+                |
+            Go HR API
+                |
+           PostgreSQL
 ```
 
-PostgreSQL is the authoritative cloud system of record. The desktop application is local-first for HR/admin employee data, but synchronization still passes through the same authenticated API and tenant rules as the web application.
+PostgreSQL is the system of record for all HR workflows.
 
 ## Components
 
@@ -66,7 +57,6 @@ Responsibilities:
 - leave policy/balance/request workflows;
 - attendance schedules, timekeeping, corrections and summaries;
 - audit events;
-- desktop sync endpoints;
 - readiness/health endpoint.
 
 ### PostgreSQL
@@ -82,23 +72,6 @@ employee identity = (organization_id, employee_id)
 ```
 
 Employee IDs are intentionally reusable in separate organizations. Queries and foreign keys must keep organization ID in the boundary.
-
-### Desktop
-
-Path: `apps/desktop`
-
-Technology: Wails + React + Go.
-
-Responsibilities:
-
-- HR/admin native workspace;
-- encrypted local employee storage;
-- OS-keychain-backed session token;
-- queued offline employee mutations;
-- sync push/pull;
-- cloud leave/attendance/audit operations.
-
-Managers and employees should use the web portal rather than the native HR console.
 
 ## AI assistant service
 
@@ -157,23 +130,10 @@ At check-in the resolved schedule is snapshotted onto the attendance entry, incl
 
 Corrections are approval-based. Approved corrections recompute time metrics in the same transaction.
 
-## Local-first synchronization
-
-The desktop stores employee records locally and queues mutations.
-
-A queued mutation carries the base server version. During sync:
-
-- safe updates advance the server version;
-- a stale base version is returned as a conflict;
-- pending local edits are not silently overwritten by a pull.
-
-The current desktop foundation detects conflicts; a full human conflict-resolution UI remains a future layer.
-
 ## Trust boundaries
 
 - Browser: untrusted; bearer tokens are not exposed to browser JavaScript.
 - Next.js BFF: trusted web-session boundary.
 - API: authorization and tenant enforcement boundary.
 - PostgreSQL: authoritative state.
-- Desktop local store: encrypted cache, not a replacement for tenant validation.
 - Demo credentials: development only.
